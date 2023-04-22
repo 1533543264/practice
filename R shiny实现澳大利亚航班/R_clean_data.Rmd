@@ -1,0 +1,324 @@
+---
+title: "Assignment 1"
+author: "KAIXU"
+date: "2023-03-26"
+output: html_document
+---
+
+```{r}
+library(tidyverse)  #Import the integration package, using functions such as read_csv
+library(dplyr)      #Import dplyr to process data.frame
+library(ggplot2)    #Draw image
+library(plotrix)    #Draw 3D image  
+csv_data <- read_csv('Wastes.csv')  #Read file import data to csv_data
+options(scipen = 250) #Convert numbers to the decimal system and do not use scientific counting within 250 decimal places
+
+#1
+nrow(csv_data)  #Print row number
+ncol(csv_data)  #Print column number
+csv_data[1:10,] #Print the first ten lines
+csv_data[nrow(csv_data)-9:nrow(csv_data),] #10 lines after output
+```
+
+
+```{r}
+#2
+length(unique(csv_data$Type)) #Print unique sum number
+sum(grepl('chemicals',csv_data$Type))#Print the total number of types containing chemicals
+sum(grepl('organics',csv_data$Type))  #Print the total number of types containing organics
+```
+
+
+```{r}
+#3
+na_count <- 0   #Record the number of rows containing NA
+na_name <- c()  #Records the name of the number of rows containing NA
+na_percent <- c() #Record the NA percentage of the number of rows containing NA
+#Use a circular list for each column to determine the number of rows and the line name and percentage of NA
+for(i in 1:ncol(csv_data)){
+  if(sum(is.na(csv_data[[i]])) > 0){
+    na_count <- na_count + 1
+    na_name <- append(na_name,i) 
+    na_percent <- append(na_percent,sum(is.na(csv_data[[i]]))/length(csv_data[[i]]))
+  }
+}
+#Number of lines to print number name ratio
+print(na_count)
+print(colnames(csv_data[na_name]))
+sprintf('%1.8f%%',na_percent*100)
+```
+
+
+```{r}
+#4
+sum(duplicated(csv_data$Case_ID)) #Calculate the total number of rows with duplicate values
+repeat_data <- duplicated(csv_data$Case_ID) #Assign the True False array of repeated values to repeat_data
+repeat_list <- 0
+#Use loops to generate tables of duplicate values
+for(i in 1:nrow(csv_data)){
+  if(repeat_data[i] == TRUE){
+    if(length(repeat_list) == 1){
+      repeat_list <- csv_data[i,]
+    }
+    else{
+      repeat_list <- rbind(repeat_list,csv_data[i,])
+    }
+  }
+}
+#Print repeat_list
+repeat_list
+#Remove duplicate values assigned to new_data
+new_data <- filter(csv_data,!duplicated(csv_data$Case_ID))
+```
+
+
+```{r}
+#5
+#Remove duplicate values assigned to new_data
+new_data <- filter(csv_data,!duplicated(csv_data$Case_ID))
+#nrow(new_data)
+sum(lengths(unique(new_data$Case_ID))) #Since new_data is data that removes duplicate values, all data is unique
+table(new_data$`Core_Non-core`) #Use table to select the number of Core_Non-core non-na values for new_data
+```
+
+
+```{r}
+#6
+sum_data <- data.frame(new_data$Category,new_data$Tonnes) #Combine Category and Tonnes in a new table
+names(sum_data) <- c('Category','Tonnes')   #Renames the column names of the table
+total_data <- aggregate(Tonnes ~ Category , data = sum_data,sum) #Calculate the total tonnage of the same type
+total_data #Print table
+#Use ggplot to draw the bar graph，x is Category ,Y is Tonnes
+ggplot(data = total_data,mapping = aes(x = Category ,y=Tonnes)) +
+  geom_bar(stat = 'identity') + 
+  geom_text(mapping = aes(label = round(Tonnes)),size = 3,color = 'red', vjust = -0.1) +
+  theme(axis.text.x = element_text(size = 8, face = "bold", vjust = 0.5, hjust = 1, angle = 90))
+```
+
+
+```{r}
+#7
+Fate_tonnes <- data.frame(new_data$Fate,new_data$Tonnes) #Select Fate and Tonnes create new table
+names(Fate_tonnes) <- c('Fate','Tonnes')  #Renames the column names of the table
+Fate_tonnes <- aggregate(Tonnes ~ Fate , data = Fate_tonnes,sum) #Calculate the total tonnage of the same Fate type
+Fate_tonnes <- arrange(Fate_tonnes,-Tonnes)   #Order the tonnage from largest to smallest
+Fate_tonnes
+#Fate_tonnes[1:1,]
+Fate_tonnes[which.max(Fate_tonnes$Tonnes):which.max(Fate_tonnes$Tonnes),]#print the max data
+```
+
+
+```{r}
+#8
+wastes_organic <- filter(new_data,Category == 'Organics') #Select the Category values for Organics' data
+organic_total <- data.frame(wastes_organic$Type,wastes_organic$Stream,wastes_organic$Tonnes) #Get the columns for Type Stream and Tonnes and form the new table
+names(organic_total) <- c('Type','Stream','Tonnes') #Rename the column names of the table
+organic_total <- aggregate(Tonnes ~ Type + Stream,data = organic_total,sum) #Calculate the sum of Tonnes of different streams of different types
+organic_total #Print table
+write.csv(x = organic_total,file = 'wastes_organics_type_stream.csv') #Generate CSV to save the data
+#Draw a bar graph of the total number of Tonnes of different Type streams
+ggplot(data = organic_total,aes(Type,Tonnes,fill=Stream))+ geom_bar(stat = 'identity',position="dodge")
+```
+
+#9
+
+```{r}
+year_data <- read_csv('Year_State_ID.csv') #Read csv of Year_State_ID
+names(year_data) <- c('Year_State_ID','Year','State') # Rename the column names of the table
+new_list <- merge(new_data, year_data,by='Year_State_ID')#Consolidate data according to Year_State_ID
+new_list[1:10,]#Print the first ten lines
+```
+
+```{r}
+#10
+State_tonnes <- data.frame(new_list$State,new_list$Tonnes) #Select state and Tonnes to form the table
+names(State_tonnes)<- c('State','Tonnes')
+state_new <- State_tonnes %>% #Select data with Tonnes greater than 0
+    filter(Tonnes >= 0)
+State_cal <- merge( aggregate(Tonnes ~ State,state_new,min),aggregate(Tonnes ~ State,state_new,max),by='State') #Merge the maximum and minimum table
+State_cal <- merge(State_cal, aggregate(Tonnes ~ State,state_new,mean),by='State') #Merge mean table
+names(State_cal) <- c('State','Min','Max','Mean') #The table column name is renamed
+State_cal #print table
+sprintf('The states with the highest mean are: %s', State_cal[which.max(State_cal$Mean),1]) #Output the region corresponding to the maximum of all the maximum values
+#Draw the picture and add the title of the picture
+p_mean = ggplot(data = State_cal,aes(x = reorder(State,-Mean) ,y = Mean ))+ geom_bar(stat = 'identity') 
+p_mean + xlab("State") + ylab("Mean") + ggtitle("Ranking by the mean of tonnes in each state")
+p_max = ggplot(data = State_cal,aes(x = reorder(State,-Max) ,y = Max ))+ geom_bar(stat = 'identity') 
+p_max + xlab("State") + ylab("Max") + ggtitle("Ranking by the max of tonnes in each state")
+
+#According to the data and charts, I can observe that the average value of NSW is the highest, and that of NT is the lowest, among which the average value of SA Tas ACT NT is less than 10000, the average value of Qld is more than 25000, the average value of Vic is more than 30000, and the maximum value of NSW Vic Qld is nearly over 40000. The maximum value of WA SA is also close, both of which are less than 15000 and greater than 10000, while the maximum value of Tas ACT and NT is less than 5000, and NT is the smallest among the maximum values. 
+#According to the combination of the two images, the deviation between the maximum value and the mean value of Vic and Qld is larger than that of NSW. NSW's Max - NSW's mean < (Vic's or Qld's Max) - (Vic's or Qld's mean)  
+#All states have a minimum value of 0. That's what I've observed
+
+
+```
+
+
+```{r}
+#11
+#Screen for types of Fate containing Recycling
+Recycle_tonnes <- new_list %>% 
+  filter(Fate %in% 'Recycling') 
+#Filter Type Tonnes and Year to form the new table
+Recycle_tonnes <- data.frame(Recycle_tonnes$Type,Recycle_tonnes$Tonnes,Recycle_tonnes$Year)
+names(Recycle_tonnes) <- c('Type','Tonnes','Year')#The table column name is renamed
+Recycle_tonnes <- aggregate(Tonnes ~ Type + Year,data = Recycle_tonnes,sum)#The total number of Tonnes is calculated by different Type and Year
+#Screen for types of Fate containing Disposal
+Disposal_tonnes <- new_list %>% 
+  filter(Fate %in% 'Disposal')
+#Filter Type Tonnes and Year to form the new table
+Disposal_tonnes <- data.frame(Disposal_tonnes$Type,Disposal_tonnes$Tonnes,Disposal_tonnes$Year)
+names(Disposal_tonnes) <- c('Type','Tonnes','Year')#The table column name is renamed
+Disposal_tonnes <- aggregate(Tonnes ~ Type + Year,data = Disposal_tonnes,sum)#The total number of Tonnes
+#Screen for types of Fate containing Waste reuse
+Waste_reuse_addtonnes <- new_list %>% 
+  filter(Fate %in% 'Waste reuse')
+#Filter Type Tonnes and Year to form the new table
+Waste_reuse_addtonnes <- data.frame(Waste_reuse_addtonnes$Type,Waste_reuse_addtonnes$Tonnes,Waste_reuse_addtonnes$Year)
+names(Waste_reuse_addtonnes) <- c('Type','Tonnes','Year')#The table column name is renamed
+Waste_reuse_addtonnes <- aggregate(Tonnes ~ Type + Year,data = Waste_reuse_addtonnes,sum)#The total number of Tonnes
+Waste_reuse_addtonnes <- Waste_reuse_addtonnes %>% select(Year,Type,Tonnes)#Filter Type Tonnes and Year to form the new table
+Waste_reuse_addtonnes <- arrange(Waste_reuse_addtonnes,Type,Year)
+add_waste <- c()#An array of annual differences
+#Use a loop to iterate through the tabular data and calculate the difference for each year
+for(i in 2:nrow(Waste_reuse_addtonnes)){
+  if(Waste_reuse_addtonnes[i-1,2] == Waste_reuse_addtonnes[i,2]){ #If the type has data for multiple years
+    add_waste <- append(add_waste,Waste_reuse_addtonnes[i,3]-Waste_reuse_addtonnes[i-1,3])
+  }
+  else{#If the type has only one year of data, the default value is 0
+    add_waste <- append(add_waste,0)
+  }
+}
+add_waste<-append(add_waste,0)
+#My reason: Since the problem is the type with the largest increase over many years, I think the increase should be the difference of many years. If there is only one year's data, the difference cannot be calculated, so I set these data to 0
+
+#Create a table and modify the column names
+Waste_reuse_addtonnes <- data.frame(Waste_reuse_addtonnes$Type,add_waste)
+names(Waste_reuse_addtonnes) <- c('Type','Add_value')#The table column name is renamed
+#Calculate multiyear differences for different years of the same category
+Waste_reuse_addtonnes <- aggregate(Add_value ~ Type ,data = Waste_reuse_addtonnes,sum)
+#Output the corresponding difference
+Recycle_tonnes[which.max(Recycle_tonnes$Tonnes),]
+Disposal_tonnes[which.max(Disposal_tonnes$Tonnes),]
+sprintf('The Type with the largest increase is: %s; The value of the increase is: %f',Waste_reuse_addtonnes[which.max(Waste_reuse_addtonnes$Add_value),1],Waste_reuse_addtonnes[which.max(Waste_reuse_addtonnes$Add_value),2])
+```
+
+```{r}
+#12
+#Select Hazardous wastes and Type Tyres (T140) and the value of Tonnes is greater than or equal to 0
+Hazardous_wastes <- new_list %>% 
+  filter(Category %in% 'Hazardous wastes') %>% 
+  filter(Type %in% 'Tyres (T140)') %>% 
+  filter(Tonnes >= 0)
+#Divide the intervals and name the column Tonnes_range
+Hazardous_wastes[,'Tonnes_range'] <- cut(Hazardous_wastes$Tonnes,breaks = c(-0.1,10000,20000,40000,80000),labels=c('[0,10000)','[10000,20000)','[20000,40000)','[40000,80000]'))
+#Generate p_Hazardous_wastes form for painting
+p_Hazardous_wastes <- data.frame(Hazardous_wastes$State,Hazardous_wastes$Tonnes_range)
+names(p_Hazardous_wastes) <- c('State','Tonnes_range')#The table column name is renamed
+number <- rep(1,length(p_Hazardous_wastes$State))#Generates an array to count the number totals
+p_Hazardous_wastes$number <- number#Merge array
+p_Hazardous_wastes <- aggregate(number ~ State+Tonnes_range,p_Hazardous_wastes,sum)#Count the number of different ranges on each map
+#Plot the score_range by state
+ggplot(data = p_Hazardous_wastes,aes(reorder(State,-number),number,fill = Tonnes_range,label = number))+
+  geom_bar(stat = 'identity')+
+   geom_text(size = 3, position = position_stack(vjust = 0.5))
+#According to the image, we can find that the Type Tyres(T140) and the tonnage range of Hazardous wastes in different regions are different. Among them, the tonnage range of ACT NT Tas is 0-10000, and the tonnage range of SA is 10,000-20000, but there is no data exceeding 20000. VIC ranks first in tonnage between 20000 and 40000. NSW is the first in tons between 40,000 and 80,000.So that's what I found.
+
+```
+
+
+```{r}
+#13
+#Select Food organics
+state_waste_food <- new_list %>% 
+  filter(Type %in% 'Food organics')
+#Split year string
+for (i in 1:nrow(state_waste_food)) {
+  state_waste_food[i,9] <- substr(state_waste_food[i,9],1,4)
+}
+#Component table
+state_waste_food <- data.frame(state_waste_food$Year,state_waste_food$Tonnes,state_waste_food$State)
+names(state_waste_food) <- c('Year','Tonnes','State') #The table column name is renamed
+#Calculate the tonnage sum
+state_waste_food <- aggregate(Tonnes ~ Year + State ,data = state_waste_food,sum)
+#Draw image
+ggplot(data = state_waste_food,aes(x=Year,y=Tonnes,group = State,color=State,shape=State))+
+  geom_point()+
+  geom_line()+
+  xlab("Year")+
+  ylab("Value")+
+  theme_bw()
+#According to the images, NSW Vic Qld WA SA Tas NT and ACT can be obtained from top to bottom, in which Tas NT and ACT are very close. In terms of time passage, Vic decreases over time, Qld increases, NSW fluctuates the most and ACT the least.So that's what I found.
+```
+
+```{r}
+#14
+#Select the C&D data in Stream
+CD_list <- new_list %>% 
+  filter(Stream %in% 'C&D')
+#Select the Year and Tonnes to create a table
+CD_list <- data.frame(CD_list$Year,CD_list$Tonnes)
+#Split year string
+for (i in 1:nrow(CD_list)) {
+  CD_list[i,1] <- substr(CD_list[i,1],1,4)
+}
+#Calculate the sum of Tonnes
+CD_list <- aggregate(CD_list.Tonnes ~ CD_list.Year,data = CD_list,sum)
+names(CD_list) <- c('Year','C&D')#The table column is renamed
+#Australian miners data was introduced
+AUS_mining <- c('135.7','137.1','180.8','165.5','198.9','239.9','260.5','267.1','220.2','212.5','222.1','217.8','256.3','252.2','264.4')
+#source:https://www.abs.gov.au/statistics/labour/employment-and-unemployment/labour-force-australia-detailed/may-2022
+#Add miner data
+CD_list$`Factor:Number_mining` <- AUS_mining
+#Draw a scatter plot
+plot(x = CD_list$`C&D`,y = CD_list$`Factor:Number_mining`,
+     xlab = "C&D",
+     ylab = "Factor:Number_mining",
+     main = "The relationship between mining and C&D "
+)
+#Explain the rationality and explanation of the process: In my opinion, C&D of construction waste is closely related to the generation, energy, capital and personnel of the following wastes. Therefore, I found no data about construction workers when I checked the data of Australian National Bureau of Statistics, but I found data about mining workers, because the materials used in construction are all from mining. The number of mining workers will affect the entire construction industry and even the generation of construction waste, so I choose mining workers as the factor.
+```
+
+```{r}
+#15
+#Screen the data whose Fate is Energy recovery and Tonnes greater than 0
+state_Energy_recovery <- new_list %>% 
+  filter(Fate %in% 'Energy recovery') %>% 
+  filter(Tonnes > 0)
+#Cut year string
+state_Energy_recovery$Year <- substr(state_Energy_recovery$Year,1,4)
+#Filter generation table
+state_Energy_recovery <- data.frame(state_Energy_recovery$Year,state_Energy_recovery$Type,state_Energy_recovery$Tonnes)
+names(state_Energy_recovery) <- c('Year','Type','Tonnes')#The table column is renamed
+state_Energy_recovery <- aggregate(Tonnes ~ Year + Type ,data = state_Energy_recovery,sum)#Calculate the sum of the different types
+#The following is the process of generating 3D pie chart
+energy_tonnes <- data.frame(state_Energy_recovery$Type,state_Energy_recovery$Tonnes)
+names(energy_tonnes) <- c('Type','Tonnes')
+energy_tonnes <- aggregate(Tonnes ~ Type,data =energy_tonnes ,sum)
+energy_tonnes <- arrange(energy_tonnes,-Tonnes)
+account <- 0
+for(i in 7:nrow(energy_tonnes)){
+  account <- account+energy_tonnes[i,2]
+}
+energy_tonnes <- energy_tonnes[-c(7,8,9),]
+energy_tonnes[6,2] <- energy_tonnes[6,2] + account
+#Calculated percentage
+piepercent = paste(round(100*energy_tonnes$Tonnes/sum(energy_tonnes$Tonnes)), "%")
+piepercent_name <- c()
+for(i in 1:length(piepercent)){
+  piepercent_name <- append(piepercent_name,paste(energy_tonnes[i,1],piepercent[i]))
+}
+#Generate a line graph
+ggplot(state_Energy_recovery,shape=Type)+
+  geom_line(aes(x=Year,y=Tonnes,group = Type,color=Type))+
+  xlab("Year")+
+  ylab("Value")+
+  theme_bw()+
+  theme(axis.text.x = element_text(vjust = .5,size = 6))
+pie3D(energy_tonnes$Tonnes,labels = piepercent_name,theta = 0.8,labelcex = 0.75, main = "The proportion of Energy recovery by different categories in Australia")
+#According to the line chart, we can see that Food organics account for the largest amount of energy recovery and increase gradually over time. In total, it accounts for 59%. Secondly, Garden organics has a relatively stable development from the line chart, reaching a peak of over 300,000 in 2015, and it accounts for 14% of the total. Timber with time change, from 2006 to 2008 you that slow growth, 2008 to 2010 steady, 2010 to 2016 continued to decline, 2016 to 2018 rapid rise, 2018 to 2020 decline, its total proportion of 11%. The rest of the data was relatively flat. From the figure, we can predict that Food organics will be a growing trend in the future, and its total proportion will be larger and larger. According to mathematical calculation, the data from 2020 to 2006 shows a growth rate of 17.8%. Therefore, the data is in an increasing state, which also proves that more food is recycled in the energy recycling of the Australian government.
+```
+
+
+
+
