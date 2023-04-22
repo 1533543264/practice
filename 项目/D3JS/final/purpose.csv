@@ -1,0 +1,78 @@
+﻿country,purpose,value
+Australia,Exhibition,841
+Australia,convention,12174
+Australia,business,51207
+Australia,Employment,70366
+Australia,Education,77974
+Australia,Holiday,81971
+Australia,Visiting,431982
+China,Exhibition,95
+China,convention,323
+China,business,2540
+China,Employment,2830
+China,Holiday,3511
+China,Visiting,16570
+China,Education,27940
+France,Exhibition,51
+France,convention,325
+France,Education,932
+France,Employment,2387
+France,business,2764
+France,Visiting,8460
+France,Holiday,9567
+India,Exhibition,203
+India,business,3397
+India,convention,3852
+India,Holiday,7379
+India,Employment,25432
+India,Education,36807
+India,Visiting,113687
+New Zealand,Exhibition,213
+New Zealand,Education,2803
+New Zealand,convention,3976
+New Zealand,Employment,12922
+New Zealand,business,18485
+New Zealand,Holiday,30320
+New Zealand,Visiting,146725
+Philippines,Exhibition,35
+Philippines,convention,328
+Philippines,business,630
+Philippines,Holiday,2059
+Philippines,Education,5441
+Philippines,Employment,7075
+Philippines,Visiting,8938
+Samoa,convention,4
+Samoa,Holiday,13
+Samoa,Exhibition,24
+Samoa,Education,38
+Samoa,business,66
+Samoa,Visiting,118
+Samoa,Employment,2676
+South Africa,Exhibition,15
+South Africa,convention,146
+South Africa,Education,587
+South Africa,Holiday,878
+South Africa,business,1052
+South Africa,Employment,1618
+South Africa,Visiting,8362
+UK,Exhibition,86
+UK,convention,1268
+UK,Education,1418
+UK,Employment,8828
+UK,business,10228
+UK,Holiday,16808
+UK,Visiting,92783
+USA,Exhibition,105
+USA,convention,1930
+USA,Education,1976
+USA,Employment,3041
+USA,Holiday,11420
+USA,business,12005
+USA,Visiting,36290
+Vanuatu,Exhibition,14
+Vanuatu,Holiday,17
+Vanuatu,convention,22
+Vanuatu,Education,30
+Vanuatu,business,40
+Vanuatu,Visiting,49
+Vanuatu,Employment,3558

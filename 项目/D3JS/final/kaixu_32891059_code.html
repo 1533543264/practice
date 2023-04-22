@@ -1,0 +1,1412 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="d3.js"></script>
+<link rel="stylesheet" href="leaflet.css" />
+<script src="leaflet.js" ></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/vector.js"></script>
+<script>
+//Introduce an external background dynamic image
+$(function(){
+	var victor = new Victor("container_box", "output");
+	var theme = [
+			["#002c4a", "#005584"],
+			["#35ac03", "#3f4303"],
+			["#ac0908", "#cd5726"],
+			["#18bbff", "#00486b"]
+		]
+	$(".color li").each(function(index, val) {
+		var color = theme[index];
+		 $(this).mouseover(function(){
+			victor(color).set();
+		 })
+	});
+});
+</script>
+<style>
+*{margin: 0;padding: 0;}
+#container_box {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+#output {
+	width: 100%;
+	height: 100%;
+}
+.color{
+	width: 120px;
+	height: 20px;
+	margin: 0 auto;
+	position: fixed;
+	left: 50%;
+	margin-left: -60px;
+	bottom: 20px;
+    z-index: 999;
+}
+.color li{
+	float: left;
+	margin: 0 5px;
+	width: 20px;
+	height: 20px;
+	background: #ccc;
+	box-shadow: 0 0 4px #FFF;
+	list-style: none;
+	cursor: pointer;
+}
+.color li:nth-child(1){
+	background: #002c4a;
+}
+.color li:nth-child(2){
+	background: #35ac03;
+}
+.color li:nth-child(3){
+	background: #ac0908;
+}
+.color li:nth-child(4){
+	background: #18bbff;
+}
+.first_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;           
+    z-index: 2;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+    text-align: center;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction: column;
+}
+.second_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+    display:flex;
+    flex-direction: row;
+}
+.third_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+}
+.fourth_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+}
+.fifth_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+}
+#left_button{
+    background-color:transparent;
+    border: none;
+    position: absolute; 
+    z-index: 99;
+    font-size: 500%;
+    opacity: 0.5;
+}
+#right_button{
+    background-color:transparent;
+    border: none;
+    position: absolute; 
+    z-index: 99;
+    font-size: 500%;
+    opacity: 0.5;
+}
+#container {
+    margin-top: -3%;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    height:90%;
+    display: flex;
+    flex-direction: row;
+}
+#mapid{
+    width: 90%;
+    height: 80%;
+    margin-top: 5%;
+}
+p {
+    color: #000;
+    font-size: 15px;
+    margin: 15px 0 10px 0;
+}
+#my_dataviz{
+    width: 100%;
+    height: 100%;
+}
+#box-one { 
+    width: 75%; 
+    height: 3%; margin-left: 3%;
+    margin-bottom: 2%;
+    display: flex; align-items: center;
+    margin-top: 2%;
+}
+#box-one .progress { 
+    margin-left: 5%;
+    width: 75%;  
+    height: 5px; 
+    border-radius: 3.3px; 
+    background: #F2F2F2; 
+}
+#box-one .progress .bar { 
+    width:0%; 
+    height: 100%; 
+    border-radius: 3.3px; 
+    background: #0072FC; 
+}
+#box-one .progress-thumb { 
+    width:14px; 
+    height: 14px; 
+    border-radius: 50%; 
+    background: white; 
+    box-shadow: 0 0 15px 5px #0072FC; 
+    float: right; 
+    position: relative; 
+    left: 6px; top: -5px; 
+}
+#left_div{
+    position: absolute;
+    margin-left: 2%;
+    height: 90%;
+    display:flex;
+    align-items: center;
+}
+#right_div{
+    position: absolute; 
+    right: 5%;
+    height: 90%;
+    display:flex;
+    align-items: center;
+}
+#left_button{
+    color: #ccc;
+}
+#right_button{
+    color: #ccc;
+}
+.sixth_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+}
+.seventh_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+}
+.eighth_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+}
+.ninth_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+}
+.tenth_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+}
+.eleventh_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction: column;
+}
+.twelve_common{
+    position: absolute;
+    width: 89%;
+    height: 90%;
+    z-index: 1;
+    background-color: white;
+    opacity: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-style:solid;
+    border-radius: 5%;
+    border-color: black;
+    border-width: 3px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction: column;
+}
+#mapid{
+    width: 90%;
+    height: 450%;
+    margin-top: 5%;
+}
+#first__svg{
+    width: 100%; 
+    margin-left: 7%;
+}
+#svg_pie{
+    width: 60%;
+    height:90%;
+    margin-left: 0%;
+}
+#my_bar{
+    width: 50%;
+    height:180%;
+}
+#line_move{
+    width: 50%;
+    height: 80%;
+    margin-top: 0%;
+}
+#line_move_second{
+    width: 50%;
+    height: 80%;
+    margin-top: 0%;
+}
+</style>
+</head>
+<body>
+<div>
+    <div id = 'big_box'>
+        <div class="slide_1">
+            <div id = 'left_div'>
+                <button id="left_button" type="button" onclick="clicked(-1)"><</button>
+            </div>
+            <div class="first_common">
+                <h1>Welcome to everyone who wants to come to Australia or is already in Australia.</h1>
+                <h1>Next I will tell a story about international communication</h1>
+                <h1>This article will talk about coming to and leaving Australia as an international friend</h1>
+            </div>
+            <div class="second_common">
+                <img src="flowmap.png" width="70%" height="95%" style="margin-top: 1%;margin-left: 5%;"/>
+                <div style="padding: 1% 1% 1% 1%; width: 20%;height:40%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 5%;">
+                    <p>First of all, what are the countries with which Australia communicates closely?
+                        Through data collected on the Australian Government's web site. There are ten countries with close contacts, namely Britain, France, South Africa, India, China, Philippines, Vanuatu Samoa, New Zealand and the United States
+                    </p>
+                </div>
+            </div>
+            <div class="third_common">
+                <div style="text-align: center;width: 100%;">               
+                    <h1>Here you can find people from different countries coming and going to Australia</h1>
+                </div>
+                <div style="display:flex;flex-direction: row;">
+                    <div style="width: 70%;height: 80%;">
+                        <div style="width:100%;margin-left: 6%;">
+                            <div>
+                                <p>Monthly statistics on entry and exit from ten major countries into Australia</p>
+                            </div>
+                            <div style="display:flex;flex-direction: row;width: 100%;">
+                                <p>
+                                    Date progress: &nbsp;&nbsp;&nbsp;&nbsp;
+                                </p>
+                                <p id = 'date'>
+                                    7/2021
+                                </p>
+                                <div id="box-one">  
+                                    <div class="progress">
+                                        <div class="bar">
+                                            <div class="progress-thumb">
+                                                </br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="width: 100%; height: 100%;">
+                            <div id="container">
+                                <div id = 'first__svg'>
+                                    <div id="mapid"></div>
+                                    <div id="first__source" >
+                                        <p>Source of the shapefile: Australian Bureau of Statistics</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding: 1% 1% 1% 1%; width: 28%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 10%;margin-left: -3%;">
+                        <p>
+                            Slide your mouse or click on the plus or minus sign to zoom in and out of the map, and drag and drop the slider to discover which countries are most closely associated with Australia.
+                        </p>    
+                        <p>
+                            As the host of the story, he is from one of these ten countries and has been unable to complete his journey to Australia because of the COVID-19 pandemic and the impact of national immigration policies.
+                        </p>
+                        <P>
+                            By dragging the slider, we can see that the number of people entering and leaving Australia varies greatly from month to month. This is because customs policies at origin and arrival places change all the time, making it sometimes easier and sometimes harder to get out.
+                        </P>
+                        <p>
+                            Next, let's look at the international people with the same background as the protagonist. What is the purpose of coming to Australia?
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="fourth_common">
+                <div style="text-align: center;width: 100%;">
+                    <h1>Everyone chose Australia for different reasons</h1>
+                </div>
+                <div style="width: 100%;margin-left: 6%;display:flex;flex-direction: row;">
+                    <div style="width: 70%;height: 100%;">
+                        <img src="pie.png" width="60%" height="20%" style="margin-top: 1%;"/>
+                    </div>
+                    <div style="padding: 1% 1% 1% 1%; width: 30%;height:60%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 1%;margin-left: -10%;">
+                        <p>Our hero is an international student. So can you guess which country he's most likely in?
+                            Everyone comes to Australia with different purposes. They choose their own path and their own life. Because the national conditions of each country and the identity of each person are different, they come to Australia with different purposes. Although whether a country is rich or not will greatly affect the purpose of its people to go abroad. For example, developed countries like the United States and Britain prefer to visit relatives in Australia, and people from Samoa and Vanuatu prefer to work in Australia. They all have their own purposes and reasons.
+                        </p>
+                        <br>
+                        <br>
+                        <br>
+                        <p>
+                            Next click on the next page, you can choose the country you want to see their destination fan chart.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="fifth_common">
+                <div style="text-align: center;width: 100%;">
+                    <h1>The purpose of international people is different in each country</h1>
+                </div>
+                <div  style="width: 100%;margin-left: 6%;display:flex;flex-direction: row;height: 89%;">
+                    <div style="width: 100%;height: 89%;">
+                        <div>
+                            <p>Major countries come to Australia for purposes</p>
+                            <p>Please select the country you want to view</p>
+                            <select id="selectButton_pie" style="width: 8%;font-size: 20px;"></select>
+                        </div>
+                        <div style="width: 80%;height: 80%;">
+                            <div id="svg_pie"></div>
+                        </div>
+                        <div>
+                            <p>Note:&nbsp;&nbsp; OtherAll data represents all other purposes because the numerical proportion is too small to be optimized again</p>
+                            <p>source:&nbsp;&nbsp;data from  Overseas Arrivals and Departures | Datasets | data.gov.au-beta</p>
+                        </div>
+                    </div>
+                    <div style="padding: 1% 1% 1% 1%; width: 30%;height:50%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 5%;margin-left: -40%;">
+                        <p>First of all, you can see the proportion of different purposes of visiting Australia from these countries. Secondly, you can choose the countries you like or want to visit, they have different purposes.
+                            According to the total data, visiting relatives accounts for the largest proportion of people who come to Australia
+                        </p>
+                        <br>
+                        <p>
+                            Then you can try using a bar graph that you can switch between. I think you can more easily see the number of people in different countries
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="sixth_common">
+                <div style="text-align: center;width: 100%;">
+                    <h1>You can choose the country you like to come to Australia</h1>
+                </div>
+                <div style="width: 100%;margin-left: 6%;display:flex;flex-direction: row;height: 89%;">
+                    <div style="width: 100%;height: 100%;">
+                        <div>
+                            <p>Bar chart of destinations from major countries to Australia</p>
+                            <select id="selectButton_b" style="width: 8%;font-size: 20px;"></select>
+                        </div>
+                        <div tyle="width: 100%;height: 89%;margin-left: 6%;display:flex;flex-direction: row;">
+                            
+                            <div id="my_bar" style="width: 35%;"></div>
+                            <div style="margin-left: -3%;margin-top: -25%;">
+                                <img src="value.png" >
+                            </div>
+                        </div>
+                        <div style="margin-top: 13%;">
+                            <p style="margin-left: 20%;">purpose</p>
+                            <p>source:&nbsp;&nbsp;data from  Overseas Arrivals and Departures | Datasets | data.gov.au-beta</p>
+                        </div>
+                    </div>
+                    <div style="padding: 1% 1% 1% 1%; width: 30%;height:40%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 5%;margin-left: -40%;">
+                        <p>We can see that there is a large gap in the number of people in each country, 
+                            and the focus of international friends in each country is different.</p>
+                        <p>So where are they going to Australia?And the protagonist of our story is Victoria.</p> 
+                        <p>So where is your destination?Please click on the next page</p>
+                    </div>
+                </div>
+            </div>
+            <div class="seventh_common">
+                <div style="text-align: center;width: 100%;">
+                    <h1>Major Countries International arrivals in Australian states</h1>
+                </div>
+                <div style="width: 100%;margin-left: 6%;display:flex;flex-direction: row;height: 89%;">
+                    <div style="width: 100%;height: 100%;">
+                        <div>
+                            <p></p>
+                        </div>
+                        <div style="width: 50%;height: 90%;">
+                            <img src="arrival.png" width="100%" height="100%">
+                        </div>
+                        <div >
+                            <p>source:&nbsp;&nbsp;data from  Overseas Arrivals and Departures | Datasets | data.gov.au-beta</p>
+                        </div>
+                    </div>
+                    <div style="padding: 1% 1% 1% 1%; width: 25%;height:40%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 5%;margin-left: -40%;">
+                        <p>
+                            We can see that the number of people arriving in each state is different, indicating that the state with a large number of people is more popular and people are more willing to go there. The overall trend of states is similar, which means that states have similar policies on entry management.
+                            Our hero also arrives in Australia.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="eighth_common">
+                <div style="text-align: center;width: 100%;">
+                    <h1>State numbers of international arrivals from major countries</h1>
+                </div>
+                <div  style="width: 100%;margin-left: 6%;display:flex;flex-direction: row;height: 89%;">
+                    <div style="width: 100%;height: 89%;">
+                        <div>
+                            <p>International people from major countries arrive in Australia</p>
+                            <p>Please select the state you want to view</p>
+                            <select id="selectButton" style="width: 8%;font-size: 20px;"></select>
+                        </div>
+                        <div style="width: 80%;height: 89%;margin-top: 1%;display:flex;flex-direction: row;">
+                            <div style="margin-top: 10%;"><img src="value.png" ></div>
+                            <div id="line_move">
+                            </div>
+                        </div>
+                        <div style="margin-top: -8%;">
+                            <p style="margin-left: 20%;">date</p>
+                            <p>source:&nbsp;&nbsp;data from  Overseas Arrivals and Departures | Datasets | data.gov.au-beta</p>
+                        </div>
+                    </div>
+                    <div style="padding: 1% 1% 1% 1%; width: 30%;height:50%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 5%;margin-left: -40%;">
+                        <p>
+                            Here you can choose which states you want to see, and you can see the clever curves. Every person entering Australia will choose a state as their place of entry.
+                        </p>
+                        <br>
+                        <p>
+                            Then after international friends arrive in Australia, as non-Australian international people, they will leave Australia sooner or later. So what is the state situation of international friends leaving?
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="ninth_common">
+                <div style="text-align: center;width: 100%;">
+                    <h1>Major Countries International departures in Australian states</h1>
+                </div>
+                <div style="width: 100%;margin-left: 6%;display:flex;flex-direction: row;height: 89%;">
+                    <div style="width: 100%;height: 100%;">
+                        <div>
+                            <p></p>
+                        </div>
+                        <div style="width: 50%;height: 80%;">
+                            <img src="departure.png" width="100%" height="100%">
+                        </div>
+                        <div >
+                            <p>source:&nbsp;&nbsp;data from  Overseas Arrivals and Departures | Datasets | data.gov.au-beta</p>
+                        </div>
+                    </div>
+                    <div style="padding: 1% 1% 1% 1%; width: 25%;height:20%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 5%;margin-left: -40%;">
+                        <p>
+                            We can see that the number of people leaving is different in each state, and the number of people leaving is similar to the number of people arriving. So states with large numbers are favored.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="tenth_common">
+                <div style="text-align: center;width: 100%;">
+                    <h1>International departures from major countries</h1>
+                </div>
+                <div  style="width: 100%;margin-left: 6%;display:flex;flex-direction: row;height: 89%;">
+                    <div style="width: 100%;height: 89%;">
+                        <div>
+                            <p>International departures from Australia by major countries</p>
+                            <p>Please select the country you want to view</p>
+                            <select id="selectButton_secondl" style="width: 8%;font-size: 20px;"></select>
+                        </div>
+                        <div style="width: 80%;height: 89%;margin-top: 1%;display:flex;flex-direction: row;">
+                            <div style="margin-top: 10%;"><img src="value.png" ></div>
+                            <div id="line_move_second">
+                            </div>
+                        </div>
+                        <div style="margin-top: -8%;">
+                            <p style="margin-left: 20%;">date</p>
+                            <p>source:&nbsp;&nbsp;data from  Overseas Arrivals and Departures | Datasets | data.gov.au-beta</p>
+                        </div>
+                    </div>
+                    <div style="padding: 1% 1% 1% 1%; width: 20%;height:40%;border-radius: 5%;border-color: black;border-width: 3px;border-style:solid;margin-top: 5%;margin-left: -40%;">
+                        <p>
+                            The number of international departures continues to increase over time, and the main character leaves Australia as the story progresses.
+                        </p>
+                        <br>
+                        <p>
+                            The story ends and the hero returns to his own country.    
+                        </p>
+                            
+                    </div>
+                </div>
+            </div>
+            <div class="eleventh_common">
+                <div style="text-align: center;width: 100%;">
+                    <h1>
+                        Conclusion
+                    </h1>
+                    <h1>As an overseas student, the protagonist chooses Australia, he becomes an overseas student, prepares his own itinerary, arrives at his destination (his school), and completes his mission and leaves Australia.
+                        Of course, this is only the main character's dream.
+                    </h1>
+                    <h1>
+                        With the COVID-19 pandemic under control, countries are communicating more and more closely, the number of people entering and leaving the country is increasing, and people are also starting to take vacations, travel and visit relatives. 
+                    </h1>
+                    <h1>
+                        I hope the future can be better.
+                        Thank you for watching. 
+                    </h1>
+                </div>
+            </div>
+            <div class="twelve_common">
+            </div>
+            <div id = 'right_div'>
+                <button id="right_button" type="button" onclick="clicked(1)" >></button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="container_box">
+    <div id="output"></div>
+</div>
+<ul class="color">
+	<li></li>
+	<li></li>
+	<li></li>
+	<li></li>
+</ul>
+</body>
+<script>
+    var list = ['.first_common','.second_common','.third_common','.fourth_common','.fifth_common','.sixth_common',
+                '.seventh_common','.eighth_common','.ninth_common','.tenth_common','.eleventh_common'
+                ]
+    const data_csv = []
+    var array_csv = {}
+    const choose_valuet = []
+    //Read the data
+    d3.csv('Data__visa.csv').then(function(data) {
+        for(var i = 0;i<data.length;i++){
+                data_csv.push(data[i])}
+                return data_csv
+        });
+    //Process the data and get the array you need
+    setTimeout(() => {
+        for(var i =0;i<data_csv.length;i++){
+            if(data_csv[i].purpose == 'total'){
+                choose_valuet.push(data_csv[i])
+            }
+        }
+    }, 100);
+    // mapid is the id of the div where the map will appear
+    var map = L
+      .map('mapid')
+      .setView([0, 35], 2);   // center position + zoom
+    // Add a tile to the map = a background. Comes from OpenStreetmap
+    L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+        maxZoom: 6,
+    }).addTo(map);
+    // Add a svg layer to the map
+    L.svg().addTo(map);
+    // Create data for circles:
+    var markers = [
+        {long:parseFloat(99.4), lat:parseFloat(35.18),value:20,country: 'China',values:6572}, // corsica
+        {long:parseFloat(172.4),lat:parseFloat(-42.56),value:40,country: 'New Zealand',values:59772},
+        {long:parseFloat(-1.3),lat:parseFloat(52.29),value:20,country: 'UK',values:4439},
+        {long:parseFloat(2.5),lat:parseFloat(46.66),value:20,country: 'France',values:1051},
+        {long:parseFloat(78.2),lat:parseFloat(22.74),value:20,country: 'India',values:3320},
+        {long:parseFloat(121.3),lat:parseFloat(17.18),value:10,country: 'Philippines',values:875},
+        {long:parseFloat(-172.4),lat:parseFloat(-13.62),value:10,country: 'Samoa',values:238},
+        {long:parseFloat(23.4),lat:parseFloat(-31.7),value:10,country: 'South Africa',values:398},
+        {long:parseFloat(-98.8),lat:parseFloat(40.08),value:20,country: 'USA',values:2715},
+        {long:parseFloat(166.9),lat:parseFloat(-15.34),value:10,country: 'Vanuatu',values:401},
+    ];
+    // Select the svg area and add circles:
+    var gg = d3.select("#mapid")
+        .select("svg")
+        .selectAll("myCircles")
+        .data(markers)
+        .join('g')
+        gg.append("circle")
+        .attr("cx", d => map.latLngToLayerPoint([d.lat, d.long]).x)
+        .attr("cy", d => map.latLngToLayerPoint([d.lat, d.long]).y)
+        .attr("r", function(markers){
+                return markers.value
+        })
+        .style("fill", "red")
+        .attr("stroke", "red")
+        .attr("stroke-width", 3)
+        .attr("fill-opacity", .4)
+    //Select the svg area and add text:
+    var jj = d3.select("#mapid")
+        .select("svg").selectAll("text").data(markers).join('g')
+        gg.append('text')
+        .attr("x", d => map.latLngToLayerPoint([d.lat, d.long]).x)
+        .attr("y", d => map.latLngToLayerPoint([d.lat, d.long]).y)
+        .style('text-anchor','middle')
+        .text(function (markers) { return ''+ markers.country + '  '+markers.values})
+    // Function that update circle position if something change
+    function update_map() {
+        // If the user change the map (zoom or drag), I update circle position:
+        d3.selectAll('circle')
+        .data(markers)
+        .attr("cx", d => map.latLngToLayerPoint([d.lat, d.long]).x)
+        .attr("cy", d => map.latLngToLayerPoint([d.lat, d.long]).y)
+        // If the user change the map (zoom or drag), I update text position:
+        d3.selectAll("text")
+        .style('text-anchor','middle')
+        .data(markers)
+        .attr("x", d => map.latLngToLayerPoint([d.lat, d.long]).x)
+        .attr("y", d => map.latLngToLayerPoint([d.lat, d.long]).y)
+    }
+    var n1 = 0
+    m = 0
+    //Use layer overlaid z-index and transparency animation to complete the page-turning effect
+    function count1(i,n){　
+        if(i==0 && n == 0){
+            d3.select(list[i])
+            .style('z-index',2)
+        }
+        else{
+            m = m + 1
+        　  d3.select(list[i])
+            .style('opacity',0.25*m)
+            .style('z-index',2)
+            d3.select(list[i-n])
+            .style("opacity", 1-0.25*m)
+            .style('z-index',1)
+        　  timeoutID=setTimeout("count1(i,n1)", 250)
+        }
+        if(m == 4){
+            clearTimeout(timeoutID)
+            m= 0
+        }}
+     //Determine the current location of the click and prompt for the first or last page operation
+    var i = 0
+    var clicked = function(n) {
+    n1 = n 
+    i = i + n
+    if(i>10){
+        alert('Last page, please , click the arrow on the left')
+    }
+    else if(i<0){
+        alert('First page, click the arrow on the right')
+    }
+    else{
+        count1(i,n1)
+    }}
+    //Move and drag the progress bar to change the date and red shaded area
+    move_number = 0 
+    var run_circle = function(d){
+        move_number = 1
+        //Judge the size of the red shaded circle
+        d3.selectAll("circle")
+            .data(d)
+            .transition()
+            .duration(3000)
+            .attr('r',function(d){
+                if(d.values>100000){
+                    return 60
+                }
+                else if(d.values>40000){
+                    return 40
+                }
+                else if(d.values>10000){
+                    return 30
+                }
+                else if(d.values>1000){
+                    return 20
+                }
+                else if(d.values<1000){
+                    return 10
+                }
+                    
+            })
+        //add the  new value of the text
+        d3.selectAll('text')
+            .data(d)
+            .transition()
+            .duration(3000)
+            .text(function (d) { return ''+ d.country + '  '+d.values})
+    }
+    //Gets the width of the box and sets the width of the drag
+    var box_one = document.getElementsByClassName("progress")[0].scrollWidth
+    var split_number = box_one/10                
+    d3.interval(function(){
+        //Select the bar box
+        d3.select('.bar')
+        .call(  //Bind the drag and drop function
+            d3.drag()
+            .on('start',function(n){
+            })
+            .on('end',function(event){
+            })
+            .on('drag',function(event){
+                if( event.x<=box_one & event.x>=0){
+                d3.select('.bar')
+                .style("width", event.x+'px')
+                d3.select('#date')
+                .text(function(){
+                    var list_date =['7/2021','8/2021','9/2021','10/2021','11/2021'
+                    ,'12/2021','1/2022','2/2022','3/2022','4/2022','5/2022']
+                    return ""+list_date[Math.round(event.x/split_number)]
+                })
+                var circle_list = choose_valuet.slice(Math.round(event.x/split_number)*10,(Math.round(event.x/split_number)+1)*10)
+                run_circle(circle_list)
+                }
+            })
+        )
+    })
+map.on("moveend", update_map)
+clicked(0,0)
+</script>
+<script>
+    //The second page code block is responsible for the drop-down selection and line chart
+    let data3 = []
+    var data_3 = {}
+    //Get the data and clean the data
+    d3.csv("data_clean.csv")
+    .then(function(data) {
+        for(var i = 0;i<data.length;i++){
+            data_3['time'] = d3.timeParse("%Y-%m-%d")(data[i].time)
+            data_3['state'] = data[i].state
+            data_3['value'] = parseInt(data[i].value)
+            if(data_3.time == null){
+
+            }
+            else{
+                data3.push(data_3)
+            }
+            data_3 = {}
+        }
+    })
+    var allGroup = []
+    var data4 = []
+    //After the data is further changed, the output is passed to the update function
+    setTimeout(() => {
+        for(var i = 0;i<data3.length;i++){
+            if(data3[i].state == 'ACT_a'){
+                data4.push(data3[i])
+            }
+            if(data3[i].state.indexOf('_a')!=-1 && allGroup.indexOf(data3[i].state)==-1){
+                allGroup.push(data3[i].state)
+            }
+        }
+        d3.select("#selectButton")
+        .selectAll('myOptions')
+        .data(allGroup)
+        .enter()
+        .append('option')
+        .text(function (d) { 
+            return d.split('_')[0]; 
+        }) 
+        .attr("value", function (d) { return d; 
+        })
+        update(data4)
+    }, 100);
+    //The selector fires the function
+    d3.select("#selectButton")
+    .on("change", function(event,d) {
+        // recover the option that has been chosen
+        var selectedOption = d3.select(this).property("value")
+        // run the updateChart function with this selected option
+        data4 = []
+        for(var i = 0;i<data3.length;i++){
+            if(data3[i].state == selectedOption){
+                data4.push(data3[i])
+            }
+        }
+        console.log(selectedOption)
+        update(data4)
+    })
+    // set the dimensions and margins of the graph
+    var line_margin = {top: 10, right: 30, bottom: 30, left: 50},
+        line_width = document.getElementById("line_move").getBoundingClientRect().width - line_margin.left - line_margin.right,
+        line_height = document.getElementById("line_move").getBoundingClientRect().height - line_margin.top - line_margin.bottom;
+    // append the svg object to the body of the page
+    var svg = d3.select("#line_move")
+    .append("svg")
+        .attr("width", line_width + line_margin.left + line_margin.right)
+        .attr("height", line_height + line_margin.top + line_margin.bottom)
+    .append("g")
+        .attr("transform", `translate(${line_margin.left},${line_margin.top})`);
+    // Create a function that takes a dataset as input and update the plot:
+    function update(data) {
+    // Initialise a X axis:
+    var x =  d3.scaleTime().range([0,line_width]);
+    var xAxis = d3.axisBottom().scale(x);
+    svg.append("g")
+    .attr("transform", `translate(0, ${line_height})`)
+    .attr("class","myXaxis")
+    .style("font-size","10px")
+    // Initialize an Y axis
+    var y = d3.scaleLinear().range([line_height, 0]);
+    var yAxis = d3.axisLeft().scale(y);
+    svg.append("g")
+    .attr("class","myYaxis")
+    .style("font-size","13px")
+        // Create the X axis:
+        x.domain(d3.extent(data, d => d.time));
+        svg.selectAll(".myXaxis")
+            .attr('color','black')
+            .transition()
+            .duration(3000)
+            .call(xAxis);
+        // create the Y axis
+        y.domain([0, d3.max(data, function(d) { return d.value  }) ]);
+        svg.selectAll(".myYaxis")
+            .attr('color','black')
+            .transition()
+            .duration(3000)
+            .call(yAxis);
+        // Create a update selection: bind to the new data
+            var u = svg.selectAll(".lineTest")
+                .data([data], function(d){ return d.time });
+        // Updata the line
+        u
+            .join("path")
+            .attr("class","lineTest")
+            .transition()
+            .duration(3000)
+            .attr("d", d3.line()
+            .curve(d3.curveBasis)  
+            .x(function(d) { return x(d.time); })
+            .y(function(d) { return y(d.value); }))
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2.5)
+    }
+</script>
+<script>
+    //The third section is the code pie chart and selector
+    var data5 = {}
+    var j = 0
+    var allGroup_pie = []
+    var total_num = 0
+    //Read and filter the required data
+    const purpose_num = []
+    //Read the data
+    d3.csv('purpose.csv').then(function(data) {
+        for(var i = 0;i<data.length;i++){
+			purpose_num.push(data[i])
+            }
+        for(var i = 0;i<purpose_num.length;i++){
+            if(allGroup_pie.indexOf(purpose_num[i].country) == -1){
+                allGroup_pie.push(purpose_num[i].country)
+            }
+            if(purpose_num[i].country == 'Australia'){
+                data5[purpose_num[i].purpose] = parseInt(purpose_num[i].value)
+            }
+        }
+        for(var i in data5){
+            total_num += data5[i]
+        }
+        var num_1 = 0
+        var num_2 = ''
+        var num_3 = 0
+        for(var key in data5){
+            if(num_1 == 1){
+                data5[key+'&'+num_2] = data5[key]+num_3
+                delete data5[key]
+                num_1 = 0
+            }
+            if(data5[key]*100 - total_num <0){
+                num_1 = 1
+                num_2 = key
+                num_3 = data5[key] 
+                delete data5[key]
+            }
+        }
+        for(var key in data5){
+            if(key.length>20){
+                data5['OtherAll'] = data5[key]
+                delete data5[key]
+            }
+        }
+        d3.select("#selectButton_pie")
+        .selectAll('myOptions')
+        .data(allGroup_pie)
+        .enter()
+        .append('option')
+        .text(function (d) { return d; }) 
+        .attr("value", function (d) { return d; })
+        update_pie(data5)   //Pass the parameter to update_pie to generate the pie image
+        }
+    );
+    //set width height margin
+    var pie_margin = 100,
+    pie_width = document.getElementById("svg_pie").getBoundingClientRect().width*1 ,
+    pie_height = document.getElementById("svg_pie").getBoundingClientRect().height*1.15 ;
+    // set the color scale
+    var color = d3.scaleOrdinal()
+      .domain(["business", "convention", "education", "employment", "exhibition", "holiday", "visit"])
+      .range(['brown','GoldEnrod','red','black','green','purple','cyan']);
+    // The radius of the pieplot is half the pie_width or half the pie_height (smallest one). 
+    var radius = Math.min(pie_width, pie_height) / 2 - pie_margin
+    var update_pie = function(d){
+    // append the pie_svg object to the div called 'svg_pie'
+    var pie_svg = d3.select("#svg_pie")
+        .append("svg")
+        .attr("id","new_svg")
+        .attr("width", pie_width)
+        .attr("height", pie_height)
+        .append("g")
+        .attr("transform", `translate(${pie_width/2},${pie_height/2})`);
+    // Compute the position of each group on the pie:
+    var pie = d3.pie()
+      .sort(null) // Do not sort group by size
+      .value(d => d[1])
+    var data_ready = pie(Object.entries(d))
+    // The arc generator
+    var arc = d3.arc()
+      .innerRadius(radius * 0.5)         // This is the size of the donut hole
+      .outerRadius(radius * 0.8)
+    // Another arc that won't be drawn. Just for labels positioning
+    var outerArc = d3.arc()
+      .innerRadius(radius * 0.9)
+      .outerRadius(radius * 0.9)
+        // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+    pie_svg
+        .selectAll('w')
+        .data(data_ready)
+        .join('path')
+        .attr('d', arc)
+        .attr('fill', d => color(d.data[1]))
+        .attr("stroke", "white")
+        .style("stroke-width", "2px")
+        .style("opacity", 0.7)
+    // Add the polylines between chart and labels:
+    pie_svg
+        .selectAll('allPolylines')
+        .data(data_ready)
+        .join('polyline')
+        .attr("stroke", "black")
+        .style("fill", "none")
+        .attr("stroke-width", 1)
+        .attr('points', function(d) {
+          var posA = arc.centroid(d) // line insertion in the slice
+          var posB = outerArc.centroid(d) // line break: we use the other arc generator that has been built only for that
+          var posC = outerArc.centroid(d); // Label position = almost the same as posB
+          var midangle = d.startAngle + (d.endAngle - d.startAngle) / 2 // we need the angle to see if the X position will be at the extreme right or extreme left
+          posC[0] = radius * 0.95 * (midangle < Math.PI ? 1 : -1); // multiply by 1 or -1 to put it on the right or on the left
+          return [posA, posB, posC]
+        })
+    // Add the polylines between chart and labels:
+    pie_svg
+        .selectAll('allLabels')
+        .data(data_ready)
+        .join('text')
+        .style('height','0.5%')
+        .style('font-size','15')
+        .attr('transform', function(d) {
+            var pos = outerArc.centroid(d);
+            var midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+            pos[0] = radius * 0.95 * (midangle < Math.PI ? 1 : -1);
+            return `translate(${pos})`;
+        })
+        .style('text-anchor', function(d) {
+            var midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+            var move_list = ['start','middle','end'] 
+            var move_num = -1
+            if(d.value == 1448){
+                return 'end'
+            }
+            return (midangle < Math.PI ? 'start' : 'end')
+        })
+        .text(d => d.data[0]+' '+(d.data[1]*100/total_num).toFixed(2) +'%' )
+    }
+    //Fires the selector function
+    d3.select("#selectButton_pie")
+        .on("change", function(event,d) {
+        // recover the option that has been chosen
+        var del = document.getElementById('svg_pie')
+        var ss = document.getElementById('svg_pie').getElementsByTagName('svg')[0]
+        del.removeChild(ss)
+        var selectedOption = d3.select(this).property("value")
+        // run the updateChart function with this selected option
+        data5 = []
+        for(var i = 0;i<purpose_num.length;i++){
+            if(purpose_num[i].country == selectedOption){
+                data5[purpose_num[i].purpose] =parseInt(purpose_num[i].value)
+            }
+        }
+        total_num = 0
+        for(var i in data5){
+            total_num += parseInt(data5[i])
+        }
+        var num_1 = 0
+        var num_2 = ''
+        var num_3 = 0
+        for(var key in data5){
+            if(num_3 != 1&&num_2!=''){
+                data5[key+'&'+num_2] = data5[key]+num_3
+                num_3 = 0
+                num_2 = ''
+                delete data5[key]
+                break
+            }
+            if(data5[key]*50 - total_num <0){
+                num_2 = key
+                num_3 = data5[key] 
+                delete data5[key]
+            }
+        }
+        for(var key in data5){
+            if(key.length>20){
+                data5['OtherAll'] = data5[key]
+                delete data5[key]
+            }
+        }
+        var num_1 = 0
+        var num_2 = ''
+        var num_3 = 0
+        if(selectedOption == 'Samoa'||selectedOption == 'Vanuatu'||selectedOption == 'India'||selectedOption == 'UK'){
+            if(selectedOption == 'UK'){
+                for(var key in data5){
+                    if(key == 'Education'){
+                        data5['OtherAll'] = data5[key]+ data5['OtherAll']
+                        delete data5[key]
+                    }
+                }
+            }else{
+                data5['OtherAll'] = 0
+            if(selectedOption == 'Vanuatu'){
+                for(var key in data5){
+                    if(key=='Employment'|| key=='Visiting'||key=='OtherAll'){
+                    }
+                    else{
+                        data5['OtherAll'] = data5[key]+ data5['OtherAll']
+                        delete data5[key]
+                    }
+                }
+            }
+            else if(selectedOption == 'India'){
+                for(var key in data5){
+                    if(key=='Employment'|| key=='Visiting'||key=='OtherAll'||key == 'Holiday'|| key == 'Education'){
+                    }
+                    else{
+                        data5['OtherAll'] = data5[key]+ data5['OtherAll']
+                        delete data5[key]
+                    }
+                }
+            }
+            else{
+                for(var key in data5){
+                    if(key=='Employment' || key=='Visiting'||key=='OtherAll'){
+                    }
+                    else{
+                        data5['OtherAll'] = data5[key]+ data5['OtherAll']
+                        delete data5[key]
+                    }
+                }
+            }
+            }
+        }
+        update_pie(data5)
+    })
+</script>
+<script>
+    //The fourth graph is responsible for the bars and selectors
+    var new_data4_contry = []
+    var str_newdata4 = {}
+    var new_data4_total = []
+    //Read and process the data
+    d3.csv("purpose.csv").then( function(data) {
+      for(var i = 0;i<data.length;i++){
+        if(new_data4_contry.indexOf(data[i].country) == -1){
+          new_data4_contry.push(data[i].country)
+        }
+        if(data[i].country == 'Australia'){
+          str_newdata4['purpose'] = data[i].purpose
+          str_newdata4['value'] = parseInt(data[i].value)
+          new_data4_total.push(str_newdata4)
+          str_newdata4 = {}
+        }}
+        //Select the selector and initialize the selector options
+        d3.select("#selectButton_b")
+            .selectAll('myOptions')
+            .data(new_data4_contry)
+            .enter()
+            .append('option')
+            .text(function (d) { return d; })
+            .attr("value", function (d) { return d; }) 
+        //Pass to update_bar refs
+        update_bar(new_data4_total)
+    })
+    // set the dimensions and margins of the graph
+    var bar_margin = {top: 30, right: 30, bottom: 70, left: 60},
+    bar_width = document.getElementById("my_bar").getBoundingClientRect().width - bar_margin.left - bar_margin.right,
+    bar_height = document.getElementById("my_bar").getBoundingClientRect().width - bar_margin.top - bar_margin.bottom;
+    // append the svg_bar object to the body of the page
+    var svg_bar = d3.select("#my_bar")
+        .append("svg")
+        .attr("width", bar_width + bar_margin.left + bar_margin.right)
+        .attr("height", bar_height + bar_margin.top + bar_margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${bar_margin.left},${bar_margin.top})`);
+    // Initialize the X axis
+    var x = d3.scaleBand()
+      .range([ 0, bar_width ])
+      .padding(0.2);
+    var xAxis = svg_bar.append("g")
+      .attr("transform", `translate(0,${bar_height})`);
+    // Initialize the Y axis
+    var y = d3.scaleLinear()
+      .range([ bar_height, 0]);
+    var yAxis = svg_bar.append("g")
+      .attr("class", "myYaxis");
+    // A function that create / update_bar the plot for a given variable:
+    function update_bar(data) {
+      // Parse the Data
+        // X axis
+        x.domain(data.map(d => d.purpose));
+        xAxis.transition().duration(1000).call(d3.axisBottom(x)).attr('color','black');
+        // Add Y axis
+        y.domain([0, d3.max(data, d => d.value) ]);
+        yAxis.transition().duration(1000).call(d3.axisLeft(y)).attr('color','black');
+        // variable u: map data to existing bars
+        var u = svg_bar.selectAll("rect")
+          .data(data)
+        // update_bar bars
+        u.join("rect")
+          .transition()
+          .duration(1000)
+            .attr("x", d => x(d.purpose))
+            .attr("y", d => y(d.value))
+            .attr("width", x.bandwidth())
+            .attr("height", d => bar_height - y(d.value))
+            .attr("fill", "#69b3a2")
+    }
+    //Fires the selector function
+    d3.select("#selectButton_b").on("change", function(event,d) {
+            // recover the option that has been chosen
+            var selectedOption = d3.select(this).property("value")
+            // run the update_barChart function with this selected option
+            new_data4_total = []
+            d3.csv("purpose.csv").then( function(data) {
+              for(var i = 0;i<data.length;i++){
+                if(new_data4_contry.indexOf(data) == -1){
+                  new_data4_contry.push(data[i].country)
+                }
+                if(data[i].country == selectedOption){
+                  str_newdata4['purpose'] = data[i].purpose
+                  str_newdata4['value'] = parseInt(data[i].value)
+                  new_data4_total.push(str_newdata4)
+                  str_newdata4 = {}
+                }
+              }
+              update_bar(new_data4_total)
+            })
+        })
+</script>
+<script>
+    //The second page code block is responsible for the drop-down selection and line chart
+    const second_data3 = []
+    var second_data_3 = {}
+    //Get the data and clean the data
+    d3.csv("data_clean.csv")
+    .then(function(data) {
+        for(var i = 0;i<data.length;i++){
+            second_data_3['time'] = d3.timeParse("%Y-%m-%d")(data[i].time)
+            second_data_3['state'] = data[i].state
+            second_data_3['value'] = parseInt(data[i].value)
+            if(second_data_3.time == null){
+
+            }
+            else{
+                second_data3.push(second_data_3)
+            }
+            second_data_3 = {}
+        }
+    })
+    var second_allGroup = []
+    var second_data4 = []
+    //After the data is further changed, the output is passed to the update_secondl function
+    setTimeout(() => {
+        for(var i = 0;i<second_data3.length;i++){
+            if(second_data3[i].state == 'ACT_b'){
+                second_data4.push(second_data3[i])
+            }
+            if(second_data3[i].state.indexOf('_b')!=-1 && second_allGroup.indexOf(second_data3[i].state)==-1){
+                second_allGroup.push(second_data3[i].state)
+            }
+        }
+        d3.select("#selectButton_secondl")
+        .selectAll('myOptions')
+        .data(second_allGroup)
+        .enter()
+        .append('option')
+        .text(function (d) { 
+            return d.split('_')[0]}) 
+        .attr("value", function (d) { return d; })
+        update_secondl(second_data4)
+    }, 100);
+    //The selector fires the function
+    d3.select("#selectButton_secondl")
+    .on("change", function(event,d) {
+        // recover the option that has been chosen
+        var second_selectedOption = d3.select(this).property("value")
+        // run the update_secondlChart function with this selected option
+        second_data4 = []
+        for(var i = 0;i<second_data3.length;i++){
+            if(second_data3[i].state == second_selectedOption){
+                second_data4.push(second_data3[i])
+            }
+        }
+        update_secondl(second_data4)
+    })
+    // set the dimensions and margins of the graph
+    var line_margin2 = {top: 10, right: 30, bottom: 30, left: 50},
+        line_width2 = document.getElementById("line_move_second").getBoundingClientRect().width - line_margin2.left - line_margin2.right,
+        line_height2 = document.getElementById("line_move_second").getBoundingClientRect().height - line_margin2.top - line_margin2.bottom;
+    // append the svg object to the body of the page
+    var svg_second = d3.select("#line_move_second")
+    .append("svg")
+        .attr("width", line_width2 + line_margin2.left + line_margin2.right)
+        .attr("height", line_height2 + line_margin2.top + line_margin2.bottom)
+    .append("g")
+        .attr("transform", `translate(${line_margin2.left},${line_margin2.top})`);
+    // Create a function that takes a dataset as input and update_secondl the plot:
+    function update_secondl(data) {
+    // Initialise a X axis:
+    var x_second =  d3.scaleTime().range([0,line_width2]);
+    var xAxis_second = d3.axisBottom().scale(x_second);
+    svg_second.append("g")
+    .attr("transform", `translate(0, ${line_height2})`)
+    .attr("class","myXaxis_second")
+    // Initialize an Y axis
+    var y_second = d3.scaleLinear().range([line_height2, 0]);
+    var yAxis_second = d3.axisLeft().scale(y_second);
+    svg_second.append("g")
+    .attr("class","myYaxis_second")
+        // Create the X axis:
+        x_second.domain(d3.extent(data, d => d.time));
+        svg_second.selectAll(".myXaxis_second")
+            .attr('color','black')
+            .transition()
+            .duration(3000)
+            .call(xAxis_second);
+        // create the Y axis
+        y_second.domain([0, d3.max(data, function(d) { return d.value  }) ]);
+        svg_second.selectAll(".myYaxis_second")
+            .attr('color','black')
+            .transition()
+            .duration(3000)
+            .call(yAxis_second);
+        // Create a update_secondl selection: bind to the new data
+            var u_second = svg_second.selectAll(".lineTest_second")
+                .data([data], function(d){ return d.time });
+        // Updata the line
+        u_second
+            .join("path")
+            .attr("class","lineTest_second")
+            .transition()
+            .duration(3000)
+            .attr("d", d3.line()
+            .curve(d3.curveBasis)  
+            .x(function(d) { return x_second(d.time); })
+            .y(function(d) { return y_second(d.value); }))
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2.5)
+    }
+</script>
+</html>
