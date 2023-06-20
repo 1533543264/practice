@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Image Management</title>
+    <script src="jquery-3.6.4.min.js"></script>
+
+    <style>
+    body {
+      background-image: linear-gradient(to bottom right, #87CEFA, #98FB98);
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+  
+      h1 {
+        color: #333;
+      }
+  
+      h2 {
+        color: #666;
+        margin-top: 20px;
+      }
+  
+      input[type="text"],
+      input[type="number"],
+      select {
+        width: 200px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+  
+      input[type="file"],
+      input[type="button"],
+      input[type="submit"] {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: #4CAF50;
+        color: white;
+      }
+  
+      input[type="button"]:hover,
+      input[type="submit"]:hover {
+        background-color: #45a049;
+      }
+  
+      #textContainerUpload,
+      #textContainerSearch {
+        background-color: #fff;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+<body>
+  <h1>Image Management</h1>
+  
+  <h2>Delete Picture</h2>
+  <input type="text" id="imgName" placeholder="Please enter a picture name">
+  <button id="deleteButton">Delete</button>
+  
+  <h2>Upload Picture and Get links to similar images Text</h2>
+  <input type="file" id="imageInput" accept="image/*" title="Select File">
+  <button id="uploadButton">Upload</button>
+  <button id="generateTextButton">Get links to similar images Text</button>
+  
+  <div id="textContainerUpload"></div>
+  
+
+  <form id="myForm1">
+    <h2>Change Tags</h2>
+    <div>
+      <label for="url">URL: </label>
+      <input type="text" id="url" name="url" required><br><br>
+    </div>
+    
+    <div>
+      <label for="type">type: </label>
+      <select id="type" name="type">
+        <option value="0">0</option>
+        <option value="1">1</option>
+      </select><br><br>
+    </div>
+    
+    <div id="tagInputs">
+      <!-- Default label input box -->
+      <div class="tag-inputs">
+        <label for="tag1">tag: </label>
+        <input type="text" class="tag-input" name="tag" required>
+        <input type="number" class="count-input" name="count" min="1" required>
+        <input type="button" class="removeTagButton" value="remove"><br><br>
+      </div>
+    </div>
+
+    <input type="button" id="addTagButton" value="add tag">
+    <input type="submit" value="upload">
+  </form>
+  <h1>Search Tags</h1>
+  <button id="add-tag1">Add Tag</button>
+  <br><br>
+  <div id="tag-container1">
+    <div class="tag">
+      <input type="text" class="tag-input" placeholder="Tag">
+      <input type="number" class="count-input" min="1" value="1">
+    </div>
+  </div>
+  <br>
+  <button id="search-tags1">Search Tags</button>
+  <div id="tag-container2">
+  </div>
+  <button onclick="logout()">Log Out</button>
+  <script>
+    $(document).ready(function() {
+      
+      $('#deleteButton').click(function() {
+        var imgName = $('#imgName').val();
+        
+        var settings = {
+          "url": "https://jz3cvuh3g3.execute-api.us-east-1.amazonaws.com/ass2/delete",
+          "method": "POST",
+          "timeout": 0,
+          "headers": {
+            "Authorization": "eyJraWQiOiJXK0g1QVZvNnJ1b3prS09FZm5OZmE0MEZPQUNsQjBqWDZyK2pPU1wvSEVtND0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoidUo0c1JWVHBLcFFpMlFDR29OVEYtQSIsInN1YiI6ImY0MDgwNDA4LTgwMDEtNzA5ZS1hYWRjLTBjMDMxZWJkMzE3MCIsImNvZ25pdG86Z3JvdXBzIjpbInVzLWVhc3QtMV9IQXl6bFIwVVdfR29vZ2xlIl0sImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfSEF5emxSMFVXIiwiY29nbml0bzp1c2VybmFtZSI6Imdvb2dsZV8xMDgyNjMxNjI0NzY4NTk2NzE2MzQiLCJub25jZSI6ImNURmU1dVlXeU9ZeVdhQW91aFl2ckF1R2V5T1VCdnU1aGJNQm1iUlFuTTNrSXBDNzRpVDluTWRqWVJWejlvYml6WlBTZVl4cG1KUE9ZWTZmd1ZSd29SWDUyT05fMWVrQXQ4QW9vbkZZNTRnSWtFNl92b3U0QUpLT0J1TE9OcTZfZkFLNlAwTnozUHVEWS10ZUhTNy1mRlppRkNUcnFCY01CLWtKNnlIeGdpbyIsImF1ZCI6IjQzdWFyanVlYWh2aGg4dnQzY2t1MnVlbXZzIiwiaWRlbnRpdGllcyI6W3sidXNlcklkIjoiMTA4MjYzMTYyNDc2ODU5NjcxNjM0IiwicHJvdmlkZXJOYW1lIjoiR29vZ2xlIiwicHJvdmlkZXJUeXBlIjoiR29vZ2xlIiwiaXNzdWVyIjpudWxsLCJwcmltYXJ5IjoidHJ1ZSIsImRhdGVDcmVhdGVkIjoiMTY4NjA5OTc1NjIzNSJ9XSwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE2ODYxMTA4MzAsImV4cCI6MTY4NjE5NzIzMCwiaWF0IjoxNjg2MTEwODMwLCJqdGkiOiI1MTk4ZGQ2Yi04NWVmLTQyN2QtODg1Ni1hNDkwMDk0ZDAwMWUiLCJlbWFpbCI6Imt4dXUwMDM5QHN0dWRlbnQubW9uYXNoLmVkdSJ9.L--ULsLbQ0DCnqgC_5TjB65DeMocx-YD_XLu6QARH_r54lrN5AjynQ4WFQyRjQ2XzAnDF6gePvoqLCvkWB2egfdkE0xfbHcpk0E48HjExB5srqpFwWHGnKinlN-Iw7PHXhuoZjEfxJOTdMet9eFNsocWGoJLGOdLqbn6hfWmc-R2nHnrQLX7bIXjIDb2_eYp_h-YDhuqVy3m7JZISYSEyyzw3MxCVsE6icCzKr39HbVlceTMoGlTbxgbXWnBs-jQWzK8cd3Y4v6ZJeEYrEP9p62ougcF_fP-xUCkx7DxdJaPzTzc19tsvEmB6lTIy60QHv5ix1ChEBWmAnAPXwnWaw",
+            "Content-Type": "application/json"
+          },
+          "data": JSON.stringify({
+            "img_name": imgName
+          }),
+        };
+        
+        $.ajax(settings).done(function(response) {
+          console.log(response);
+          alert('Picture deleted successfully!');
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          console.log(jqXHR);
+          alert('Image deletion failed!');
+        });
+      });
+      
+      $('#generateTextButton').click(function() {
+        var fileInput = document.getElementById('imageInput');
+    var file = fileInput.files[0];
+
+    var reader = new FileReader();
+    reader.onload = function(event) {
+      var imageBase64 = event.target.result.split(',')[1]; // Extract base64 image data
+      var fileName = file.name;
+
+      var settings = {
+        "url": "https://jz3cvuh3g3.execute-api.us-east-1.amazonaws.com/ass2/imagesametags",
+        "method": "POST",
+        "timeout": 0,
+        "headers": {
+          "Authorization": "eyJraWQiOiJXK0g1QVZvNnJ1b3prS09FZm5OZmE0MEZPQUNsQjBqWDZyK2pPU1wvSEVtND0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoidUo0c1JWVHBLcFFpMlFDR29OVEYtQSIsInN1YiI6ImY0MDgwNDA4LTgwMDEtNzA5ZS1hYWRjLTBjMDMxZWJkMzE3MCIsImNvZ25pdG86Z3JvdXBzIjpbInVzLWVhc3QtMV9IQXl6bFIwVVdfR29vZ2xlIl0sImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfSEF5emxSMFVXIiwiY29nbml0bzp1c2VybmFtZSI6Imdvb2dsZV8xMDgyNjMxNjI0NzY4NTk2NzE2MzQiLCJub25jZSI6ImNURmU1dVlXeU9ZeVdhQW91aFl2ckF1R2V5T1VCdnU1aGJNQm1iUlFuTTNrSXBDNzRpVDluTWRqWVJWejlvYml6WlBTZVl4cG1KUE9ZWTZmd1ZSd29SWDUyT05fMWVrQXQ4QW9vbkZZNTRnSWtFNl92b3U0QUpLT0J1TE9OcTZfZkFLNlAwTnozUHVEWS10ZUhTNy1mRlppRkNUcnFCY01CLWtKNnlIeGdpbyIsImF1ZCI6IjQzdWFyanVlYWh2aGg4dnQzY2t1MnVlbXZzIiwiaWRlbnRpdGllcyI6W3sidXNlcklkIjoiMTA4MjYzMTYyNDc2ODU5NjcxNjM0IiwicHJvdmlkZXJOYW1lIjoiR29vZ2xlIiwicHJvdmlkZXJUeXBlIjoiR29vZ2xlIiwiaXNzdWVyIjpudWxsLCJwcmltYXJ5IjoidHJ1ZSIsImRhdGVDcmVhdGVkIjoiMTY4NjA5OTc1NjIzNSJ9XSwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE2ODYxMTA4MzAsImV4cCI6MTY4NjE5NzIzMCwiaWF0IjoxNjg2MTEwODMwLCJqdGkiOiI1MTk4ZGQ2Yi04NWVmLTQyN2QtODg1Ni1hNDkwMDk0ZDAwMWUiLCJlbWFpbCI6Imt4dXUwMDM5QHN0dWRlbnQubW9uYXNoLmVkdSJ9.L--ULsLbQ0DCnqgC_5TjB65DeMocx-YD_XLu6QARH_r54lrN5AjynQ4WFQyRjQ2XzAnDF6gePvoqLCvkWB2egfdkE0xfbHcpk0E48HjExB5srqpFwWHGnKinlN-Iw7PHXhuoZjEfxJOTdMet9eFNsocWGoJLGOdLqbn6hfWmc-R2nHnrQLX7bIXjIDb2_eYp_h-YDhuqVy3m7JZISYSEyyzw3MxCVsE6icCzKr39HbVlceTMoGlTbxgbXWnBs-jQWzK8cd3Y4v6ZJeEYrEP9p62ougcF_fP-xUCkx7DxdJaPzTzc19tsvEmB6lTIy60QHv5ix1ChEBWmAnAPXwnWaw",
+          "Content-Type": "application/json"
+        },
+        "data": JSON.stringify({
+          "findsamepicture": {
+            "image": imageBase64,
+            "filename": fileName
+          }
+        }),
+      };
+
+      $.ajax(settings).done(function(response) {
+        console.log(response);
+        generateTextUpload(response.links);
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.log(jqXHR);
+        alert('An error occurred: ' + errorThrown);
+      });
+    };
+
+    reader.readAsDataURL(file);
+      });
+      
+    
+      function generateTextUpload(links) {
+        var text = "";
+       
+        for (var i = 0; i < links.length; i++) {
+          text += links[i].replace(/\\s/g, '');
+        }
+        
+        $('#textContainerUpload').text(text);
+      }
+
+      $('#add-tag1').click(function() {
+        var tagElement = '<div class="tag">' +
+          '<input type="text" class="tag-input" placeholder="Tag">' +
+          '<input type="number" class="count-input" min="1" value="1">' +
+          '<button class="remove-tag">Remove</button>' +
+          '</div>';
+
+        $('#tag-container1').append(tagElement);
+      });
+
+      $(document).on('click', '.remove-tag', function() {
+        $(this).parent('.tag').remove();
+      });
+
+      $('#search-tags1').click(function() {
+        var tags = [];
+        $('.tag').each(function() {
+          var tag = $(this).find('.tag-input').val().trim();
+          var count = parseInt($(this).find('.count-input').val());
+
+          if (tag !== '') {
+            tags.push({
+              "tag": tag,
+              "count": count
+            });
+          }
+        });
+
+        if (tags.length === 0) {
+          alert('Please enter at least one tag.');
+          return;
+        }
+
+        var request = {
+          "url": "https://jz3cvuh3g3.execute-api.us-east-1.amazonaws.com/ass2/search_tags",
+          "type": 1,
+          "tags": tags
+        };
+
+        var settings = {
+          "url": "https://jz3cvuh3g3.execute-api.us-east-1.amazonaws.com/ass2/search_tags",
+          "method": "POST",
+          "timeout": 0,
+          "headers": {
+            "Authorization": "eyJraWQiOiJXK0g1QVZvNnJ1b3prS09FZm5OZmE0MEZPQUNsQjBqWDZyK2pPU1wvSEVtND0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoidUo0c1JWVHBLcFFpMlFDR29OVEYtQSIsInN1YiI6ImY0MDgwNDA4LTgwMDEtNzA5ZS1hYWRjLTBjMDMxZWJkMzE3MCIsImNvZ25pdG86Z3JvdXBzIjpbInVzLWVhc3QtMV9IQXl6bFIwVVdfR29vZ2xlIl0sImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfSEF5emxSMFVXIiwiY29nbml0bzp1c2VybmFtZSI6Imdvb2dsZV8xMDgyNjMxNjI0NzY4NTk2NzE2MzQiLCJub25jZSI6ImNURmU1dVlXeU9ZeVdhQW91aFl2ckF1R2V5T1VCdnU1aGJNQm1iUlFuTTNrSXBDNzRpVDluTWRqWVJWejlvYml6WlBTZVl4cG1KUE9ZWTZmd1ZSd29SWDUyT05fMWVrQXQ4QW9vbkZZNTRnSWtFNl92b3U0QUpLT0J1TE9OcTZfZkFLNlAwTnozUHVEWS10ZUhTNy1mRlppRkNUcnFCY01CLWtKNnlIeGdpbyIsImF1ZCI6IjQzdWFyanVlYWh2aGg4dnQzY2t1MnVlbXZzIiwiaWRlbnRpdGllcyI6W3sidXNlcklkIjoiMTA4MjYzMTYyNDc2ODU5NjcxNjM0IiwicHJvdmlkZXJOYW1lIjoiR29vZ2xlIiwicHJvdmlkZXJUeXBlIjoiR29vZ2xlIiwiaXNzdWVyIjpudWxsLCJwcmltYXJ5IjoidHJ1ZSIsImRhdGVDcmVhdGVkIjoiMTY4NjA5OTc1NjIzNSJ9XSwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE2ODYxMTA4MzAsImV4cCI6MTY4NjE5NzIzMCwiaWF0IjoxNjg2MTEwODMwLCJqdGkiOiI1MTk4ZGQ2Yi04NWVmLTQyN2QtODg1Ni1hNDkwMDk0ZDAwMWUiLCJlbWFpbCI6Imt4dXUwMDM5QHN0dWRlbnQubW9uYXNoLmVkdSJ9.L--ULsLbQ0DCnqgC_5TjB65DeMocx-YD_XLu6QARH_r54lrN5AjynQ4WFQyRjQ2XzAnDF6gePvoqLCvkWB2egfdkE0xfbHcpk0E48HjExB5srqpFwWHGnKinlN-Iw7PHXhuoZjEfxJOTdMet9eFNsocWGoJLGOdLqbn6hfWmc-R2nHnrQLX7bIXjIDb2_eYp_h-YDhuqVy3m7JZISYSEyyzw3MxCVsE6icCzKr39HbVlceTMoGlTbxgbXWnBs-jQWzK8cd3Y4v6ZJeEYrEP9p62ougcF_fP-xUCkx7DxdJaPzTzc19tsvEmB6lTIy60QHv5ix1ChEBWmAnAPXwnWaw",
+            "Content-Type": "application/json"
+          },
+          "data": JSON.stringify(request)
+        };
+
+        $.ajax(settings).done(function(response) {
+        console.log(response);
+        
+        // Parse the links from the response
+        var links = JSON.parse(response.links).links;
+        
+        // Clear the existing content in tag-container2
+        $('#tag-container2').empty();
+        
+        // Generate the text representation of the links
+        var text = "";
+        for (var i = 0; i < links.length; i++) {
+            text += links[i] + "<br>";
+        }
+        
+        // Add the text to the page
+        $('#tag-container2').append('<text>' + text + '</text>');
+        }).fail(function(xhr, status, error) {
+        console.error(error);
+        // Handle the error here
+        });
+
+        });
+    
+     
+    });
+    $('#uploadButton').click(function() {
+        var fileInput = document.getElementById('imageInput');
+        var file = fileInput.files[0];
+        
+        var reader = new FileReader();
+        reader.onload = function(event) {
+          var imageBase64 = event.target.result.split(',')[1]; // Get base64 image data
+          var fileName = file.name;
+          
+          var settings = {
+            "url": "https://jz3cvuh3g3.execute-api.us-east-1.amazonaws.com/ass2/upload_image",
+            "method": "POST",
+            "timeout": 0,
+            "headers": {
+              "Authorization": "eyJraWQiOiJXK0g1QVZvNnJ1b3prS09FZm5OZmE0MEZPQUNsQjBqWDZyK2pPU1wvSEVtND0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoidUo0c1JWVHBLcFFpMlFDR29OVEYtQSIsInN1YiI6ImY0MDgwNDA4LTgwMDEtNzA5ZS1hYWRjLTBjMDMxZWJkMzE3MCIsImNvZ25pdG86Z3JvdXBzIjpbInVzLWVhc3QtMV9IQXl6bFIwVVdfR29vZ2xlIl0sImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfSEF5emxSMFVXIiwiY29nbml0bzp1c2VybmFtZSI6Imdvb2dsZV8xMDgyNjMxNjI0NzY4NTk2NzE2MzQiLCJub25jZSI6ImNURmU1dVlXeU9ZeVdhQW91aFl2ckF1R2V5T1VCdnU1aGJNQm1iUlFuTTNrSXBDNzRpVDluTWRqWVJWejlvYml6WlBTZVl4cG1KUE9ZWTZmd1ZSd29SWDUyT05fMWVrQXQ4QW9vbkZZNTRnSWtFNl92b3U0QUpLT0J1TE9OcTZfZkFLNlAwTnozUHVEWS10ZUhTNy1mRlppRkNUcnFCY01CLWtKNnlIeGdpbyIsImF1ZCI6IjQzdWFyanVlYWh2aGg4dnQzY2t1MnVlbXZzIiwiaWRlbnRpdGllcyI6W3sidXNlcklkIjoiMTA4MjYzMTYyNDc2ODU5NjcxNjM0IiwicHJvdmlkZXJOYW1lIjoiR29vZ2xlIiwicHJvdmlkZXJUeXBlIjoiR29vZ2xlIiwiaXNzdWVyIjpudWxsLCJwcmltYXJ5IjoidHJ1ZSIsImRhdGVDcmVhdGVkIjoiMTY4NjA5OTc1NjIzNSJ9XSwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE2ODYxMTA4MzAsImV4cCI6MTY4NjE5NzIzMCwiaWF0IjoxNjg2MTEwODMwLCJqdGkiOiI1MTk4ZGQ2Yi04NWVmLTQyN2QtODg1Ni1hNDkwMDk0ZDAwMWUiLCJlbWFpbCI6Imt4dXUwMDM5QHN0dWRlbnQubW9uYXNoLmVkdSJ9.L--ULsLbQ0DCnqgC_5TjB65DeMocx-YD_XLu6QARH_r54lrN5AjynQ4WFQyRjQ2XzAnDF6gePvoqLCvkWB2egfdkE0xfbHcpk0E48HjExB5srqpFwWHGnKinlN-Iw7PHXhuoZjEfxJOTdMet9eFNsocWGoJLGOdLqbn6hfWmc-R2nHnrQLX7bIXjIDb2_eYp_h-YDhuqVy3m7JZISYSEyyzw3MxCVsE6icCzKr39HbVlceTMoGlTbxgbXWnBs-jQWzK8cd3Y4v6ZJeEYrEP9p62ougcF_fP-xUCkx7DxdJaPzTzc19tsvEmB6lTIy60QHv5ix1ChEBWmAnAPXwnWaw",
+              "Content-Type": "application/json"
+            },
+            "data": JSON.stringify({
+              "upload": {
+                "image": imageBase64,
+                "filename": fileName
+              }
+            }),
+          };
+          
+          $.ajax(settings).done(function(response) {
+            console.log(response);
+            alert('Image uploaded successfully!');
+          }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log(jqXHR);
+            alert('Image upload failed!');
+          });
+        };
+        
+        reader.readAsDataURL(file);
+      });
+  </script>
+
+<script>
+  $(document).ready(function() {
+    // Add label and quantity input box
+    $('#addTagButton').click(function() {
+      var inputCount = $('.tag-inputs').length + 1; // Count the number of existing input boxes
+      var newInputHtml = '<div class="tag-inputs">' +
+                         '<label for="tag' + inputCount + '">tag ' + ': </label>' +
+                         '<input type="text" class="tag-input" name="tag" required>' +
+                         '<input type="number" class="count-input" name="count" min="1" required>' +
+                         '<input type="button" class="removeTagButton" value="Remove Tags">' +
+                         '</div>';
+      $('#tagInputs').append(newInputHtml);
+    });
+
+    // Remove labels and quantity entry boxes
+    $(document).on('click', '.removeTagButton', function() {
+      var inputCount = $('.tag-inputs').length;
+      if (inputCount > 1) {
+        $(this).closest('.tag-inputs').remove();
+      }
+    });
+
+    // Handling form submissions
+    $('#myForm1').submit(function(event) {
+      event.preventDefault(); // Blocking form submissions
+
+      // Get the value of the URL input box
+      var url = $('#url').val();
+
+      // Get the value of the type selector
+      var type = $('#type').val();
+
+      // Get the value of the input box
+      var tagInputs = $('.tag-input');
+      var countInputs = $('.count-input');
+
+      var tags = [];
+
+      // Constructing an array of label objects
+      for (var i = 0; i < tagInputs.length; i++) {
+        var tag = $(tagInputs[i]).val();
+        var count = parseInt($(countInputs[i]).val());
+        if (tag !== '' && count > 0) {
+          tags.push({
+            "tag": tag,
+            "count": count
+          });
+        }
+      }
+
+      // Preparing data objects
+      var data = {
+        "url": url,
+        "type": parseInt(type),
+        "tags": tags
+      };
+
+      // Preparing AJAX settings
+      var settings = {
+        "url": "https://jz3cvuh3g3.execute-api.us-east-1.amazonaws.com/ass2/edit_dynamodb",
+        "method": "POST",
+        "timeout": 0,
+        "headers": {
+          "Authorization": "eyJraWQiOiJXK0g1QVZvNnJ1b3prS09FZm5OZmE0MEZPQUNsQjBqWDZyK2pPU1wvSEVtND0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoidUo0c1JWVHBLcFFpMlFDR29OVEYtQSIsInN1YiI6ImY0MDgwNDA4LTgwMDEtNzA5ZS1hYWRjLTBjMDMxZWJkMzE3MCIsImNvZ25pdG86Z3JvdXBzIjpbInVzLWVhc3QtMV9IQXl6bFIwVVdfR29vZ2xlIl0sImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfSEF5emxSMFVXIiwiY29nbml0bzp1c2VybmFtZSI6Imdvb2dsZV8xMDgyNjMxNjI0NzY4NTk2NzE2MzQiLCJub25jZSI6ImNURmU1dVlXeU9ZeVdhQW91aFl2ckF1R2V5T1VCdnU1aGJNQm1iUlFuTTNrSXBDNzRpVDluTWRqWVJWejlvYml6WlBTZVl4cG1KUE9ZWTZmd1ZSd29SWDUyT05fMWVrQXQ4QW9vbkZZNTRnSWtFNl92b3U0QUpLT0J1TE9OcTZfZkFLNlAwTnozUHVEWS10ZUhTNy1mRlppRkNUcnFCY01CLWtKNnlIeGdpbyIsImF1ZCI6IjQzdWFyanVlYWh2aGg4dnQzY2t1MnVlbXZzIiwiaWRlbnRpdGllcyI6W3sidXNlcklkIjoiMTA4MjYzMTYyNDc2ODU5NjcxNjM0IiwicHJvdmlkZXJOYW1lIjoiR29vZ2xlIiwicHJvdmlkZXJUeXBlIjoiR29vZ2xlIiwiaXNzdWVyIjpudWxsLCJwcmltYXJ5IjoidHJ1ZSIsImRhdGVDcmVhdGVkIjoiMTY4NjA5OTc1NjIzNSJ9XSwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE2ODYxMTA4MzAsImV4cCI6MTY4NjE5NzIzMCwiaWF0IjoxNjg2MTEwODMwLCJqdGkiOiI1MTk4ZGQ2Yi04NWVmLTQyN2QtODg1Ni1hNDkwMDk0ZDAwMWUiLCJlbWFpbCI6Imt4dXUwMDM5QHN0dWRlbnQubW9uYXNoLmVkdSJ9.L--ULsLbQ0DCnqgC_5TjB65DeMocx-YD_XLu6QARH_r54lrN5AjynQ4WFQyRjQ2XzAnDF6gePvoqLCvkWB2egfdkE0xfbHcpk0E48HjExB5srqpFwWHGnKinlN-Iw7PHXhuoZjEfxJOTdMet9eFNsocWGoJLGOdLqbn6hfWmc-R2nHnrQLX7bIXjIDb2_eYp_h-YDhuqVy3m7JZISYSEyyzw3MxCVsE6icCzKr39HbVlceTMoGlTbxgbXWnBs-jQWzK8cd3Y4v6ZJeEYrEP9p62ougcF_fP-xUCkx7DxdJaPzTzc19tsvEmB6lTIy60QHv5ix1ChEBWmAnAPXwnWaw",
+          "Content-Type": "application/json"
+        },
+        "data": JSON.stringify(data)
+      };
+
+      // Sending AJAX requests
+      $.ajax(settings)
+        .done(function(response) {
+          console.log(response);
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+          console.log("AJAX request failure: " + textStatus + ", " + errorThrown);
+        });
+    });
+  });
+</script>
+<script>
+  function logout() {
+    window.close();
+  }
+</script>
+</body>
+</html>
