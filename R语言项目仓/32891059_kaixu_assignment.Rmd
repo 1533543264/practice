@@ -1,0 +1,506 @@
+---
+title: "finalassignment"
+author: "kaixu"
+date: "2023-06-02"
+output: html_document
+---
+part B
+```{r}
+# Load required packages
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(rvest)
+library(stringr)
+library(reshape2)
+# Load HTML content
+html <- read_html("https://www.rba.gov.au/statistics/frequency/exchange-rates.html")
+
+# Locate table element using CSS selector or XPath expression
+table <- html %>% html_node("table")  # CSS selector
+# Alternatively,
+# table <- html %>% html_nodes(xpath = "//table")  # XPath expression
+
+# Extract table data
+data <- table %>% html_table(fill = TRUE)
+# Convert data to DataFrame
+df <- data.frame(data)
+df <- t(df)
+df[1, 1] <- 'date'
+# Extract the first row of data
+col_names <- df[1, ]
+# Set the first row as column names
+colnames(df) <- col_names
+# Convert matrix or array to data frame
+df <- as.data.frame(df)
+# Remove the first row
+df <- df[-1, ]
+# Get the current number of rows
+num_rows <- nrow(df)
+# Set new row names as integer sequence
+new_row_names <- 1:num_rows
+# Assign the new row names to the data frame
+rownames(df) <- new_row_names
+# Convert date format
+df1 <- melt(df, id = "date")
+colnames(df1) <- c('date', 'money_kind', 'value')
+# Convert the 'value' column to numeric
+df1$value <- as.numeric(df1$value)
+# Select the top 16 currency types
+top16_currencies <- df1 %>%
+  group_by(money_kind) %>%
+  summarise(total_value = sum(value)) %>%
+  top_n(16, total_value) %>%
+  arrange(desc(total_value)) %>%
+  pull(money_kind)
+# Filter out the data for the top 16 currencies
+df_top16 <- df1 %>%
+  filter(money_kind %in% top16_currencies)
+df_top16$date <- str_sub(df_top16$date, start = 1, end = 6)
+# Create a line plot, displayed in a 4x4 panel, and apply logarithmic scale to the y-axis
+ggplot(df_top16, aes(x = date, y = value, colour = money_kind, group = money_kind)) +
+  geom_line(size = 1) +
+  labs(x = "date", y = "value", colour = "money kind", title = "Units of Foreign Currencies per Australian Dollar") +
+  theme_minimal() +
+  facet_wrap(~ money_kind, nrow = 4, ncol = 4, scales = "free_y") +
+  theme(strip.text = element_text(size = 8, face = "bold")) +
+  scale_y_continuous(trans = "log10", labels = scales::comma)  # Use English labels with comma as the thousands separator
+
+```
+```{r}
+# Load HTML content
+html <- read_html("https://www.rba.gov.au/statistics/frequency/retail-payments/2023/retail-payments-0423.html")
+# Use XPath expressions to locate table elements
+table <- html %>% html_nodes(xpath = "//table")
+# Extract table data
+data <- table %>% html_table(fill = TRUE)
+# Convert the data to a DataFrame
+data <- data[[1]]
+data <- data[-nrow(data), ]
+data <- data[, 1:2]
+data <- data[-c(1:3), ]
+colnames(data) <- c("Value of Retail Payments", "Value ($ billion)")
+data$`Value ($ billion)` <- as.numeric(gsub("[^0-9.]", "", data$`Value ($ billion)`))
+data <- data[!grepl("of which", data$`Value of Retail Payments`), ]
+data$Value <- gsub("^([[:alpha:]]+\\s+[[:alpha:]]+).*", "\\1", data$`Value of Retail Payments`)
+# Generated pie chart
+library(scales)  # The scales package is loaded to format percentages
+percent_values <- percent(data$`Value ($ billion)` / sum(data$`Value ($ billion)`))
+pie(data$`Value ($ billion)`,
+    labels = paste(data$Value, percent_values),
+    col = rainbow(length(data$`Value ($ billion)`)),
+    main = "Value of Retail Payments",
+    clockwise = TRUE)
+```
+
+part c
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(scales)
+
+# Task 1:
+
+# Read the CSV file named "ptv_data".
+ptv_data <- read.csv('property_transaction_victoria.csv')
+
+# Check dimensions (number of rows and columns)
+dim(ptv_data)
+
+# Display the structure of the dataframe
+str(ptv_data)
+
+# Check the unique values in the "state" column
+unique(ptv_data$state)
+
+# Only the data in the Vic state is retained
+ptv_data_vic <- filter(ptv_data, state == "Vic")
+
+# Check the unique values in the "state" column after filtering
+unique(ptv_data_vic$state)
+
+
+# Task 2: 
+
+# Delete unnecessary columns
+ptv_data_vic <- ptv_data_vic %>%
+  select(-badge, -url, -building_size_unit, -land_size_unit, -listing_company_id, -listing_company_phone, -auction_date, -available_date, -images, -images_floorplans, -listers, -inspections)
+
+# Check the dimensions of the updated dataframe
+dim(ptv_data_vic)
+
+# Display the first 5 lines
+head(ptv_data_vic, 5)
+
+
+# Task 3: 
+
+# Filter data
+filtered_data_suburb <- ptv_data_vic %>%
+  filter(suburb %in% c('Clayton', 'Mount Waverley', 'Glen Waverley', 'Abbotsford')) %>%
+  filter(property_type %in% c('apartment', 'house', 'townhouse', 'unit'))
+
+# Remove rows with missing values
+filtered_data_suburb_naomit <- na.omit(filtered_data_suburb)
+
+# Select the required columns
+filtered_data_named <- filtered_data_suburb_naomit %>% 
+  select(suburb, property_type, price)
+
+# Convert dollar signs and commas to numeric types
+filtered_data_named$price <- gsub('\\$', "", filtered_data_named$price)
+filtered_data_named$price <- gsub(",", "", filtered_data_named$price)
+filtered_data_named$price <- as.numeric(filtered_data_named$price)
+
+# Remove rows with missing values
+filtered_data_named <- na.omit(filtered_data_named)
+
+# Output the filtered and cleaned data
+str(filtered_data_named)
+
+# Summarize the data by suburb and property type
+summary_filtered_data <- filtered_data_named %>%
+  group_by(suburb, property_type) %>%
+  summarise(
+    Max_Price = max(price),
+    Min_Price = min(price),
+    Mean_Price = mean(price),
+    Median_Price = median(price)
+  )
+
+# Output summary_filtered_data
+summary_filtered_data
+
+
+# Task 4: 
+
+# See the number of missing values in each column
+missing_value_counts <- colSums(is.na(ptv_data_vic))
+
+# Calculate the percentage of missing values
+missing_value_percent <- missing_value_counts / nrow(ptv_data_vic)
+
+# Conversion percentage value
+missing_value_percent <- percent(missing_value_percent, accuracy = 0.001)
+
+# output missing_value_percent value
+missing_value_percent
+
+
+# Task 5: 
+
+# View the structure of the data
+str(ptv_data_vic)
+
+# Change the "sold_date" column to Date style
+ptv_data_vic$sold_date <- as.Date(ptv_data_vic$sold_date)
+
+# Check the structure of the updated data
+str(ptv_data_vic)
+
+# Processing date formatting
+Sys.setlocale("LC_TIME", "English")
+
+# Processing year, month, week, day
+ptv_data_vic$month <- format(ptv_data_vic$sold_date, "%m")
+ptv_data_vic$day <- format(ptv_data_vic$sold_date, "%d")
+ptv_data_vic$weekday <- format(ptv_data_vic$sold_date, "%A")
+ptv_data_vic$year <- format(ptv_data_vic$sold_date, "%Y")
+
+ptv_data_vic
+
+# Task 6: 
+
+# Sort the data by sold date
+ptv_sorted <- ptv_data_vic %>% arrange(sold_date)
+
+# Delete the null sold_date value
+unique_dates <- ptv_sorted$sold_date %>% na.omit()
+
+# Print the unique dates
+unique(unique_dates)
+
+# Print the earliest and latest dates
+earliest_date <- head(unique_dates, 1)
+latest_date <- tail(unique_dates, 1)
+earliest_date
+latest_date
+
+# Calculate the yearly trend
+yearly_trend_data <- ptv_data_vic %>%
+  na.omit() %>%
+  group_by(year) %>%
+  summarise(count = n())
+
+# Chart yearly trend
+ggplot(yearly_trend_data, aes(x = year, y = count, group = 1, color = 'red')) +
+  geom_line() +
+  labs(title = 'Yearly Data Trend Chart', x = 'Year', y = 'Count')
+
+# Calculate the monthly trend
+monthly_trend_data <- ptv_data_vic %>%
+  na.omit() %>%
+  group_by(month) %>%
+  summarise(count = n())
+
+# Chart monthly trend
+ggplot(monthly_trend_data, aes(x = month, y = count, group = 1)) +
+  geom_line() +
+  labs(title = 'Monthly Data Trend Chart', x = 'Month', y = 'Count')
+
+# Calculate the weekday trend
+weekday_trend_data <- ptv_data_vic %>%
+  na.omit() %>%
+  group_by(weekday) %>%
+  summarise(count = n())
+
+# Chart weekday trend
+ggplot(weekday_trend_data, aes(x = weekday, y = count, group = 1)) +
+  geom_line() +
+  labs(title = 'Weekday Data Trend Chart', x = 'Weekday', y = 'Count')
+
+# Calculate the daily trend
+daily_trend_data <- ptv_data_vic %>%
+  na.omit() %>%
+  group_by(day) %>%
+  summarise(count = n())
+
+# Chart daily trends
+ggplot(daily_trend_data, aes(x = day, y = count, group = 1)) +
+  geom_line() +
+  labs(title = 'Daily Data Trend Chart', x = 'Day', y = 'Count')
+# Task 7: 
+
+# Filtered data
+ptv_2022_vic_data <- ptv_data_vic %>%
+  filter(year == "2022" & property_type %in% c('apartment', 'house', 'townhouse', 'unit'))
+
+# Group data by month and property and calculate the number of transactions
+ptv_2022_vic_data_count <- ptv_2022_vic_data %>%
+  group_by(month, property_type) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Trend mapping
+ggplot(ptv_2022_vic_data_count, aes(x = month, y = count, group = property_type, color = property_type)) +
+  geom_line() +
+  labs(title = 'Monthly trend chart for different property types in 2022', x = 'Month', y = 'Count')
+
+
+# Task 8: 
+
+# Remove the dollar sign and comma and convert them to a number type
+ptv_2022_data_vic_price <- ptv_data_vic
+ptv_2022_data_vic_price$price <- gsub('\\$', "", ptv_2022_data_vic_price$price)
+ptv_2022_data_vic_price$price <- gsub(",", "", ptv_2022_data_vic_price$price)
+ptv_2022_data_vic_price$price <- as.numeric(ptv_2022_data_vic_price$price)
+ptv_2022_data_vic_price <- na.omit(ptv_2022_data_vic_price, cols = "price")
+
+# Filter data 
+ptv_2022_data_vic_price <- ptv_2022_data_vic_price %>%
+  filter(year == "2022" & property_type %in% c('apartment', 'house', 'townhouse', 'unit'))
+# Group by property type and month and calculate total and average prices
+ptv_2022_data_vic_price <- ptv_2022_data_vic_price %>%
+  group_by(property_type, month) %>%
+  summarise(
+    total_price = sum(price),
+    average_price = mean(price)
+  )
+
+ptv_2022_data_vic_price
+
+
+# Task 9.1: 
+
+# Filter data for the year 2022
+ptv_2022_data_vic_suburb <- ptv_data_vic %>%
+  filter(year == '2022') %>%
+  group_by(suburb) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  arrange(desc(count))
+
+# Top 10 suburbs with the most output
+head(ptv_2022_data_vic_suburb, 10)
+
+
+# Task 9.2: 
+
+# Get the top 10 suburbs
+vic_data_top_10 <- head(ptv_2022_data_vic_suburb, 10)
+vic_data_top_10_suburb <- vic_data_top_10$suburb
+
+# Filter data for the top 10 suburbs
+ptv_2022_vic_data_top_10 <- ptv_2022_vic_data %>%
+  filter(suburb %in% vic_data_top_10_suburb) %>%
+  group_by(property_type) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  arrange(desc(count))
+
+# Output the most data
+head(ptv_2022_vic_data_top_10, 1)
+
+
+# Task 9.3: 
+
+# Group and calculate transaction counts by suburb and property type
+ptv_2022_top_10_data <- ptv_2022_vic_data %>%
+  filter(suburb %in% vic_data_top_10_suburb) %>%
+  group_by(suburb, property_type) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Draw a stacked bar chart
+ggplot(ptv_2022_top_10_data, aes(x = suburb, y = count, fill = property_type)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Stacked Bar Chart for Top 10 Suburbs", x = "Suburb", y = "Count")
+
+
+# Task 10.1: 
+
+# Select the suburbs of interest
+suburbs <- c('Kew', 'South Yarra', 'Caulfield', 'Clayton', 'Glen Waverley', 'Burwood', 'Abbotsford')
+
+# Filter data for property type 'house' and the selected suburbs
+ptv_house <- ptv_data %>%
+  filter(property_type == 'house' & suburb %in% suburbs)
+
+# Remove the dollar and comma characters and convert them to numbers
+ptv_house$price <- gsub('\\$', "", ptv_house$price)
+ptv_house$price <- gsub(",", "", ptv_house$price)
+ptv_house$price <- as.numeric(ptv_house$price)
+
+# Delete rows that are missing values
+ptv_house_new <- ptv_house[, c("suburb", "price", "parking_spaces", "bathrooms", "land_size", "bedrooms")]
+ptv_house_new <- na.omit(ptv_house_new)
+
+# Calculate the mean and median of different variables
+summary_stats <- ptv_house_new %>%
+  group_by(suburb) %>%
+  summarise(
+    mean_bedrooms = mean(bedrooms),
+    mean_bathrooms = mean(bathrooms),
+    mean_parking_spaces = mean(parking_spaces),
+    mean_land_size = mean(land_size),
+    mean_price = mean(price),
+    median_bedrooms = median(bedrooms),
+    median_bathrooms = median(bathrooms),
+    median_parking_spaces = median(parking_spaces),
+    median_land_size = median(land_size),
+    median_price = median(price)
+  )
+
+summary_stats
+
+
+# Task 10.2: 
+
+# Calculate correlations between different variables
+
+ptv_house_cor <- ptv_house %>%
+  group_by(suburb) %>%
+  summarise(
+    cor_bedrooms_bathrooms = cor(bedrooms, bathrooms),
+    cor_bathrooms_price = cor(bathrooms, price),
+    cor_bedrooms_parking_spaces = cor(bedrooms, parking_spaces),
+    cor_parking_spaces_land_size = cor(parking_spaces, land_size),
+    cor_bedrooms_land_size = cor(bedrooms, land_size),
+    cor_bedrooms_price = cor(bedrooms, price),
+    cor_bathrooms_parking_spaces = cor(bathrooms, parking_spaces),
+    cor_bathrooms_land_size = cor(bathrooms, land_size),
+    cor_parking_spaces_price = cor(parking_spaces, price),
+    cor_land_size_price = cor(land_size, price)
+  )
+
+ptv_house_cor
+
+
+# Task 11.1: 
+
+# Removes missing values and calculates the length
+ptv_description <- ptv_data_vic %>%
+  na.omit() %>%
+  mutate(description_length = nchar(gsub('<br/>', '', description)),
+         description_length_group = cut(description_length, breaks = c(0, 500, 1000, 1500, 2000, 2500, Inf),
+                                        labels = c('[1,500]', '[501,1000]', '[1001,1500]', '[1501,2000]', '[2001,2500]', '>=2500')))
+ptv_description
+# Task 11.2: 
+# Group the data and count the number of lists
+ptv_description_length_group <- ptv_description %>%
+  group_by(description_length_group) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Draw bar charts
+ggplot(ptv_description_length_group, aes(x = description_length_group, y = count, fill = description_length_group)) +
+  geom_bar(stat = 'identity') +
+  labs(x = 'Description Length Group', y = 'Count') +
+  ggtitle('Number of Transactions for Different Description Length Groups') +
+  theme(plot.title = element_text(hjust = 0.5))
+ptv_description_length_group
+
+```
+
+part D
+```{r}
+library(rpart)
+library(dplyr)
+library(rpart.plot)
+library(tidyverse)
+
+# Read data
+train_data <- read.csv('forum_liwc_train.csv')
+test_data <- read.csv('forum_liwc_test.csv')
+# Remove rows with missing values
+train_data <- na.omit(train_data)
+test_data <- na.omit(test_data)
+
+# Select independent variables
+independent_vars <- train_data[, 2:90]  # Select features from column 2 to 90 as independent variables
+
+# Extract labels
+labels <- train_data$label
+
+# Build Model 1
+model1 <- rpart(labels ~ ., data = train_data, method = 'class')
+
+# The training data evaluates the performance of the model
+train_predictions <- predict(model1, train_data, type = 'class')  
+train_accuracy <- sum(train_predictions == labels) / length(labels)  
+train_accuracy
+
+# Turn unit_faculty and demographic_sex into digital encodings
+train_data$unit_faculty <- as.factor(train_data$unit_faculty)
+train_data$demographic_sex <- as.factor(train_data$demographic_sex)
+
+# Computational correlation
+cor_unit_faculty <- cor(as.numeric(train_data$unit_faculty), as.numeric(train_data$label))
+cor_unit_faculty
+
+# Computational correlation
+cor_demographic_sex <- cor(as.numeric(train_data$demographic_sex), as.numeric(train_data$label))
+cor_demographic_sex
+
+# Gets test_independent_vars and test_labels
+test_independent_vars <- test_data[, 2:90]
+test_labels <- test_data$label
+
+# Prediction of test data
+test_predictions <- predict(model1, test_data, type = 'class')
+
+# Calculate the accuracy of the model
+test_accuracy <- sum(test_predictions == test_labels) / length(test_labels)
+test_accuracy
+
+# Evaluate model performance
+confusion_matrix <- table(test_labels, test_predictions)  
+
+precision <- confusion_matrix[2, 2] / sum(confusion_matrix[, 2])  
+
+recall <- confusion_matrix[2, 2] / sum(confusion_matrix[2, ])  
+
+f1_score <- 2 * precision * recall / (precision + recall) 
+f1_score
+
+# Plot the decision tree model
+rpart.plot(model1)
+
+
+```
